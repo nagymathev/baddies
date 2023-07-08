@@ -838,7 +838,9 @@ MonoBehaviour:
   randomMove: {x: 0, y: 0}
   desiredMove: {x: 0, y: 0, z: 0}
   inputFromAgent: {x: 0, y: 0}
+  status: 
   agentHasPath: 0
+  stuckTimer: 0
 --- !u!114 &114371669452935958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -864,7 +866,7 @@ NavMeshAgent:
   m_AgentTypeID: 0
   m_Radius: 0.5
   m_Speed: 3.5
-  m_Acceleration: 8
+  m_Acceleration: 5
   avoidancePriority: 50
   m_AngularSpeed: 120
   m_StoppingDistance: 0

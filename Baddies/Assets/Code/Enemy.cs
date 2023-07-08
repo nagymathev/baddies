@@ -10,7 +10,7 @@ public class Enemy : MonoBehaviour
 
     public bool checkVisibility;
     public float maxSpeed = 5.0f;
-
+	public float maxViewDistance = 35.0f;
 	public float eyeHeight = 1.5f;
 
 	public Transform target;
@@ -48,6 +48,8 @@ public class Enemy : MonoBehaviour
 
     void FixedUpdate ()
     {
+		//ToDo: only move towards the player IF I CAN SEE! =o)
+
 		// every frame...
 		UpdateAgent();
 
@@ -66,19 +68,26 @@ public class Enemy : MonoBehaviour
             Vector3 here = transform.position + Vector3.up * eyeHeight;
             Vector3 there = target.position + Vector3.up * eyeHeight;
 
-            if (checkVisibility && Physics.Raycast(here, there - here, (there - here).magnitude - 1.0f))
-            {//behind cover
+			float distance = (there - here).magnitude;
+			if (distance > maxViewDistance)
+			{//too far, can't see/smell
+				targetVel = Vector3.zero; //stop
+				agent.isStopped = true;
+			} else
+			if (checkVisibility && Physics.Raycast(here, there - here, distance - 1.0f))
+            {//can't see the player
                 targetVel = Vector3.zero; //stop
+				agent.isStopped = true;
             } else
             {//can see
                 Vector3 targetPos = target.position;
                 targetVel = (targetPos - lastTargetPos) / 0.5f;
                 lastTargetPos = targetPos;
-            }
+				agent.isStopped = false;
+				agent.SetDestination(lastTargetPos + targetVel * 0.5f);
+			}
 
-            agent.SetDestination(lastTargetPos + targetVel * 0.5f);
-
-            if ((there - here).magnitude <= 2.0f)
+			if ((there - here).magnitude <= 2.0f)
             {//attack
                 Health h = target.GetComponentInParent<Health>();
                 if (h != null && h.health > 0)

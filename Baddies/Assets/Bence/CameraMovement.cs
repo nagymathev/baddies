@@ -27,10 +27,12 @@ public class CameraMovement : MonoBehaviour
         transform.position += rotation * inputDir * (Time.deltaTime * cameraMovementSpeed);
         transform.Rotate(new Vector3(0, Input.GetAxisRaw("QE_Rotation") * cameraTurnSpeed * Time.deltaTime, 0) , Space.World);
 
-        //Dragging
-        /*if (Input.GetKey(KeyCode.Mouse1))
+		//Dragging
+		/*if (Input.GetKey(KeyCode.Mouse1))
         {
             //this.transform.position += q * mouseInput * cameraMovementSpeed;
         }*/
+
+		camera.transform.position += camera.transform.forward * Input.mouseScrollDelta.y;
     }
 }
