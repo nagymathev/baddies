@@ -6,8 +6,8 @@ public class CameraMovement : MonoBehaviour
 {
 
     public GameObject camera;
-    public float cameraMovementSpeed = 1;
-    public float cameraTurnSpeed = 1;
+    public float cameraMovementSpeed = 25;
+    public float cameraTurnSpeed = 60;
 
     // Start is called before the first frame update
     void Start()
@@ -19,27 +19,13 @@ public class CameraMovement : MonoBehaviour
     void Update()
     {
         Vector3 cameraRotation = camera.transform.rotation.eulerAngles;
-        cameraRotation.x = 0;
-        cameraRotation.z = 0;
+        var rotation = Quaternion.Euler(0, cameraRotation.y, 0);
 
-        Quaternion q = Quaternion.identity;
-        q.eulerAngles = cameraRotation;
+        Vector3 inputDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+        inputDir = Vector3.ClampMagnitude(inputDir, 1);
 
-        Vector3 combinedInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
-        combinedInput = Vector3.ClampMagnitude(combinedInput, 1);
-        //Vector3 mouseInput = new Vector3(-Input.GetAxisRaw("Mouse X"), 0, -Input.GetAxisRaw("Mouse Y"));
-        //mouseInput = Vector3.ClampMagnitude(combinedInput, 1);
-
-        this.transform.position += q * combinedInput * Time.deltaTime * cameraMovementSpeed;
-
-        //q.eulerAngles = cameraRotation + new Vector3(0, Input.GetAxisRaw("QE_Rotation") * cameraTurnSpeed, 0);
-        //this.transform.rotation = q;
-        this.transform.rotation *= Quaternion.AngleAxis(Input.GetAxisRaw("QE_Rotation") * cameraTurnSpeed * Time.deltaTime, Vector3.up);
-
-
-        //this.transform.position += q * Vector3.forward * Input.GetAxisRaw("Vertical")*Time.deltaTime * cameraMovementSpeed;
-        //this.transform.position += q * Vector3.right * Input.GetAxisRaw("Horizontal")*Time.deltaTime * cameraMovementSpeed;
-        //this.transform.position += new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+        transform.position += rotation * inputDir * (Time.deltaTime * cameraMovementSpeed);
+        transform.Rotate(new Vector3(0, Input.GetAxisRaw("QE_Rotation") * cameraTurnSpeed * Time.deltaTime, 0) , Space.World);
 
         //Dragging
         /*if (Input.GetKey(KeyCode.Mouse1))
