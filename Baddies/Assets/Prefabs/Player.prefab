@@ -788,7 +788,7 @@ MonoBehaviour:
   guns:
   - nozzle: {fileID: 4939590322795478}
     bullet: {fileID: 1644011657745884, guid: d6ab4271efd5bf24b8045abc9bda0718, type: 3}
-    reloadTime: 0.5
+    reloadTime: 0.25
     reloadTimer: 0
     spread: 0.05
     bulletsAtOnce: 1

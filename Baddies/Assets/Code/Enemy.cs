@@ -41,6 +41,7 @@ public class Enemy : MonoBehaviour
 		{
 			agent.updatePosition = false;
 			agent.updateRotation = false;
+			agent.speed = maxSpeed;
 		}
     }
 

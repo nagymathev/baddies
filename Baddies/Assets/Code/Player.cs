@@ -69,6 +69,8 @@ public class Player : MonoBehaviour
 	//Ai work variables
 	public int maxKnownObjects = 10;
 	public float eyeHeight = 1.5f;
+	float minMonsterDistance = 10.0f;
+	float maxMonsterDistance = 30.0f;
 
 	[System.Serializable]
 	public class KnownObject
@@ -95,6 +97,7 @@ public class Player : MonoBehaviour
 		{
 			agent.updatePosition = false;
 			agent.updateRotation = false;
+			agent.speed = maxSpeed;
 		}
 	}
 
@@ -222,6 +225,7 @@ public class Player : MonoBehaviour
 			{
 				if (knownObjects.FindIndex(ko => ko.go == go) < 0)
 				{//not known yet
+					//should we check distance or visibility?
 					KnownObject ko = new KnownObject();
 					ko.go = go;
 					ko.type = go.GetComponent<Enemy>() ? ObjectType.Monster :
@@ -241,22 +245,31 @@ public class Player : MonoBehaviour
 */
 
 		//update priorities and visibility of known objects
-		for (int i= knownObjects.Count-1; i>=0; i--)
+		for (int i = knownObjects.Count-1; i>=0; i--)
 		{
 			KnownObject ko = knownObjects[i];
 			GameObject go = ko.go;
 			if (!go) { knownObjects.RemoveAt(i); continue; }
 			Vector3 there = go.transform.position + Vector3.up * eyeHeight;
-			if (Physics.Raycast(here, there - here, (there - here).magnitude - 1.0f))
-			{//not visible
-				knownObjects.RemoveAt(i);
-				continue;
-			}
+			bool notVisible = Physics.Raycast(here, there - here, (there - here).magnitude - 1.0f);
+			//{//not visible
+			//	knownObjects.RemoveAt(i);
+			//	continue;
+			//}
 			ko.distance = (there - here).magnitude;
 			switch(ko.type)
 			{
 				case ObjectType.Goal:
 					ko.priority = (1.0f / ko.distance) * 5.0f; //5 times higher
+					break;
+
+				case ObjectType.Monster:
+					if (notVisible || ko.distance > maxMonsterDistance)
+					{
+						knownObjects.RemoveAt(i);
+						continue;
+					}
+					ko.priority = 1.0f / ko.distance;
 					break;
 
 				default:
@@ -291,8 +304,8 @@ public class Player : MonoBehaviour
 
 				case ObjectType.PickUp:
 					agent.SetDestination(go.transform.position);
-					inputs.rs = Vector2.zero;
-					inputs.RT = false;
+					//inputs.rs = Vector2.zero;
+					//inputs.RT = false;
 					break;
 
 				default:
@@ -307,7 +320,6 @@ public class Player : MonoBehaviour
 
 		//stay away from enemies
 		desiredMove = Vector3.zero;
-		float minMonsterDistance = 10.0f;
 		for (int i = knownObjects.Count - 1; i >= 0; i--)
 		{
 			KnownObject ko = knownObjects[i];
@@ -317,12 +329,13 @@ public class Player : MonoBehaviour
 			{
 				case ObjectType.Monster:
 					if (ko.distance > minMonsterDistance) continue;
-					float f = (minMonsterDistance - ko.distance);
+					float f = (minMonsterDistance - ko.distance) / minMonsterDistance;
 					desiredMove += (there - here).normalized * -f; //away
 					break;
 
 				case ObjectType.Goal:
-					desiredMove += (there - here).normalized; //towards
+					if (ko.distance < 3.0f)
+						desiredMove += (there - here).normalized; //towards
 					break;
 
 				default:
@@ -331,6 +344,8 @@ public class Player : MonoBehaviour
 		}
 		if (desiredMove != Vector3.zero)
 		{
+			Debug.DrawRay(transform.position, desiredMove, Color.yellow);
+
 			Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
 			inputs.ls = new Vector2(desMoveLocal.x, desMoveLocal.z);
 			agent.isStopped = true; //cancel path
@@ -380,12 +395,16 @@ public class Player : MonoBehaviour
 		//}
 		//Vector3 moveDir = Vector3.ClampMagnitude(targetPos - body.position, 3.0f);
 		//Debug.DrawRay(body.position, moveDir, Color.red);
-		Vector3 targetVel = (targetPos - body.position);
+
+		//Debug.DrawLine(targetPos, body.position, Color.blue);
+/*		Vector3 targetVel = (targetPos - body.position);
 		targetVel.y = 0.0f;
 		if (targetVel.magnitude < 1.0f && targetVel.sqrMagnitude > 0.0001f)
 			targetVel = targetVel.normalized * maxSpeed;
 		else
-			targetVel = Vector3.ClampMagnitude(targetVel, maxSpeed);    //max speed
+			targetVel = Vector3.ClampMagnitude(targetVel * maxSpeed, maxSpeed);    //max speed
+*/
+		Vector3 targetVel = Vector3.ClampMagnitude(agent.desiredVelocity, maxSpeed);
 		Vector3 v = targetVel - body.velocity;
 		v.y = 0;
 		//body.AddForce(Vector3.ClampMagnitude(v / 0.05f, 10.0f));
