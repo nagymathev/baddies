@@ -62,8 +62,8 @@ public class Player : MonoBehaviour
 	{
 		Unknown,
 		Monster,
-		Goal,
-		PickUp
+		Goal
+//		PickUp
 	}
 
 
@@ -77,18 +77,22 @@ public class Player : MonoBehaviour
 	public class KnownObject
 	{
 		public GameObject go;
+		public ObjectType type;
 		public float priority;
 		public float distance;
-		public ObjectType type;
+		public bool visible;
 	}
 	public List<KnownObject> knownObjects = new List<KnownObject>();
 
 	public float timer;
 	public Vector2 aimOffset;
 	public Vector2 randomMove;
-	public Vector3 desiredMove;
-	public Vector2 inputFromAgent;
+	public Vector3 desiredMove; //world space; overrides path
+	public Vector2 inputFromAgent; //input space
+	public string status;
 	public bool agentHasPath;
+	public float stuckTimer;
+
 
 	void Start ()
     {
@@ -102,6 +106,19 @@ public class Player : MonoBehaviour
 			agent.speed = maxSpeed;
 		}
 	}
+
+	void OnGUI()
+	{
+		agentHasPath = agent.hasPath;
+		GUI.Label(new Rect(10.0f, 50.0f, 500,500),
+			" status = "+ status
+			+" \r\n isStopped = " + agent.isStopped
+			+ "\r\n hasPath = " + agent.hasPath
+			+ "\r\n pasthStatus = " + agent.pathStatus
+			+ "\r\n pending = " + agent.pathPending
+			+ "\r\n remDist = " + agent.remainingDistance);
+	}
+
 
 	void FixedUpdate ()
     {
@@ -215,6 +232,14 @@ public class Player : MonoBehaviour
 
 		Vector3 here = transform.position + Vector3.up * eyeHeight;
 
+		if (stuckTimer > 2.0f)
+		{
+			//leave in put as is
+			stuckTimer -= Time.fixedDeltaTime;
+			return;
+		}
+
+
 		//vision to potentially spot new objects
 		{
 			GameObject go = null;
@@ -252,6 +277,7 @@ public class Player : MonoBehaviour
 			//	knownObjects.RemoveAt(i);
 			//	continue;
 			//}
+			ko.visible = !notVisible;
 			ko.distance = (there - here).magnitude;
 			switch(ko.type)
 			{
@@ -281,25 +307,32 @@ public class Player : MonoBehaviour
 			knownObjects.RemoveAt(knownObjects.Count - 1);
 
 		//at this point the highest priority one should be at the front
+		desiredMove = Vector3.zero;
 		if (knownObjects.Count > 0)
 		{
 			KnownObject ko = knownObjects[0];
 			GameObject go = ko.go;
 			Vector3 there = go.transform.position + Vector3.up;
 
+			Debug.DrawLine(here, there, Color.white);
+
 			switch (ko.type)
 			{
 				case ObjectType.Monster:
 					Vector3 toItLocal = Quaternion.Inverse(inputRotation) * (there - here);
 					toItLocal = Vector3.ClampMagnitude(toItLocal, 1.0f);
-					//inputs.ls = new Vector2(toItLocal.x, toItLocal.z) + Random.insideUnitCircle * 0.1f;
 					inputs.rs = new Vector2(toItLocal.x, toItLocal.z) + aimOffset;
-					/*inputs.LT = */
-					inputs.RT = true;
+					inputs.RT = ko.visible;
+					if (ko.distance < minMonsterDistance)
+					{
+						float f = (minMonsterDistance - ko.distance) / minMonsterDistance;
+						desiredMove += (there - here).normalized * -f; //away
+					}
 					break;
 
-				case ObjectType.PickUp:
+				case ObjectType.Goal:
 					agent.SetDestination(go.transform.position);
+					agent.isStopped = false;
 					inputs.rs = Vector2.zero;
 					inputs.RT = false;
 					break;
@@ -316,8 +349,7 @@ public class Player : MonoBehaviour
 
 		//stay away from enemies
 		// MAYBE instead of summing them up, we should only care about the N highest priority object (for now N=1)
-		desiredMove = Vector3.zero;
-		for (int i = 0; i < Mathf.Min(knownObjects.Count, 1); i++)
+/*		for (int i = 0; i < Mathf.Min(knownObjects.Count, 1); i++)
 		{
 			KnownObject ko = knownObjects[i];
 			GameObject go = ko.go;
@@ -341,6 +373,7 @@ public class Player : MonoBehaviour
 					break;
 			}
 		}
+*/
 		if (desiredMove != Vector3.zero)
 		{
 			desiredMove *= 5.0f;
@@ -349,13 +382,21 @@ public class Player : MonoBehaviour
 			Vector3 desMoveLocal = Quaternion.Inverse(inputRotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
 			inputs.ls = new Vector2(desMoveLocal.x, desMoveLocal.z);
 			agent.isStopped = true; //cancel path
+			status = "dodging";
 		} else
-		{//nothing to run away from
+		{//nothing to run away from (for example the highest priority is a monster but far enough)
+			//safe to move towards some goal
 			int i = knownObjects.FindIndex(ko => ko.type == ObjectType.Goal);
 			if (i >= 0)
 			{
 				KnownObject ko = knownObjects[i];
 				agent.SetDestination(ko.go.transform.position);
+				agent.isStopped = false;
+				status = "path to goal";
+			} else
+			{
+				//no monster near and no known goal. explore?
+				status = "could explore";
 			}
 		}
 
@@ -378,9 +419,30 @@ public class Player : MonoBehaviour
 			//explore
 			if (Random.value < 0.1f) //about once every 5 seconds
 			{
-				Vector2 offset = Random.insideUnitCircle * 10.0f;
+				Vector2 offset = Random.insideUnitCircle * 30.0f;
 				agent.SetDestination(transform.position + new Vector3(offset.x, 0, offset.y));
+				agent.isStopped = false;
+				status = "StartExplore";
 			}
+		}
+
+		if (inputs.ls.magnitude > 0.2f && body.velocity.magnitude < 1.0f)
+		{
+			stuckTimer -= 0.5f;
+			if (stuckTimer <= 0)
+			{
+				Debug.Log("STUCK!");
+				//ok, now what do we do?
+				if (knownObjects.Count > 0)
+					knownObjects.RemoveAt(0);
+				agent.isStopped = true;
+				agent.ResetPath();
+				inputs.ls = Random.insideUnitCircle;
+				stuckTimer = 3.0f;
+			}
+		} else
+		{
+			stuckTimer = 2.0f;
 		}
 	}
 
@@ -392,7 +454,7 @@ public class Player : MonoBehaviour
 			KnownObject ko = new KnownObject();
 			ko.go = go;
 			ko.type = go.GetComponent<Enemy>() ? ObjectType.Monster :
-					go.GetComponent<PickUp>() ? ObjectType.PickUp :
+					go.GetComponent<PickUp>() ? ObjectType.Goal :
 					ObjectType.Unknown;
 			knownObjects.Add(ko);
 		}
@@ -511,7 +573,7 @@ public class Player : MonoBehaviour
         idealFwd.Normalize();
         float angle = 0.0f;
         if (inputs.ls.magnitude > 0.1f /*&& inputs.LT*/)
-            angle += la;// idealFwd = Quaternion.AngleAxis(la * 0.5f, Vector3.up) * idealFwd;
+            angle += la * 0.5f;// idealFwd = Quaternion.AngleAxis(la * 0.5f, Vector3.up) * idealFwd;
         if (inputs.rs.magnitude > 0.1f)
             angle += ra;// idealFwd = Quaternion.AngleAxis(ra * 0.5f, Vector3.up) * idealFwd;
 
