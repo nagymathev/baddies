@@ -128,7 +128,7 @@ public class Enemy : MonoBehaviour
 			body.AddForce(Vector3.ClampMagnitude(v / 0.05f, 10.0f));
 			
 			//simple turn towards movement
-			body.AddTorque(Vector3.Cross(targetVel, body.transform.forward));
+			body.AddTorque(Vector3.Cross(body.transform.forward, targetVel) * 5.0f );
 		}
 	}
 

@@ -404,7 +404,7 @@ public class Player : MonoBehaviour
 
 		// every frame...
 		//Debug.DrawRay(agent.nextPosition, Vector3.up * 3.0f, Color.green);
-		if (!agent.hasPath)
+		//if (!agent.hasPath)
 		{
 			agent.velocity = body.velocity + (body.position - agent.nextPosition) * 0.8f;
 		}
@@ -434,7 +434,8 @@ public class Player : MonoBehaviour
 					targetVel = Vector3.ClampMagnitude(targetVel * maxSpeed, maxSpeed);    //max speed
 		*/
 		Debug.DrawRay(agent.nextPosition, agent.desiredVelocity, Color.magenta);
-		Vector3 targetVel = Vector3.ClampMagnitude(agent.desiredVelocity + (agent.nextPosition - body.position) * 3.0f, maxSpeed);
+		Vector3 xPos = body.position + body.velocity * 0.1f;
+		Vector3 targetVel = Vector3.ClampMagnitude(agent.desiredVelocity + (agent.nextPosition - xPos) * 2.0f, maxSpeed);
 		Debug.DrawRay(body.position, targetVel, Color.cyan);
 		//Vector3 v = targetVel - body.velocity;
 		//v.y = 0;
