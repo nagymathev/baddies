@@ -9,9 +9,14 @@ public class SpawnOnMouse : MonoBehaviour
     private Vector2 _mousePos;
 
     [Tooltip("The distance for the raycast hit, or other debugging lines")]
-    [SerializeField] private float _pointDistance = 30f;
+    private const float _pointDistance = 100f;
 
     [SerializeField] private Enemy _enemyPrefab;
+
+    [Tooltip("The audio that plays when the player can spawn enemies")]
+    [SerializeField] private AudioClip _canSpawnAudio;
+    [Tooltip("The audio that plays when the player cannot spawn enemies")]
+    [SerializeField] private AudioClip _cannotSpawnAudio;
     void Start()
     {
         _camera = GetComponent<Camera>();
@@ -33,16 +38,32 @@ public class SpawnOnMouse : MonoBehaviour
     private void ShootRaycast(Vector3 worldPoint)
     {
         var direction = worldPoint - transform.position;
-        if (!Physics.Raycast(transform.position, direction.normalized, out RaycastHit hit, _pointDistance)) return;
+        if (!Physics.Raycast(transform.position, direction.normalized, out RaycastHit hit, _pointDistance))
+        {
+            PlayAudio(_cannotSpawnAudio);
+            return;
+        }
+
+        if (!hit.transform.gameObject.CompareTag("CanSpawnEnemiesHere"))
+        {
+            PlayAudio(_cannotSpawnAudio);
+            return;
+        }
         SpawnEnemy(hit.point);
     }
 
     private void SpawnEnemy(Vector3 spawnPoint)
     {
         if(!StateBehaviour.Instance.CanSpawnMinion(this, _enemyPrefab)) return;
-        
+
         var obj = Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
         EventManager.Instance.MinionSpawned(this, obj);
         obj.gameObject.SetActive(true);
+        AudioSource.PlayClipAtPoint(_canSpawnAudio, transform.position);
+    }
+
+    private void PlayAudio(AudioClip audio)
+    {
+        AudioSource.PlayClipAtPoint(audio, transform.position);
     }
 }
