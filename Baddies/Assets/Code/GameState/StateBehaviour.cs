@@ -11,9 +11,11 @@ namespace Code.GameState
         private void Start()
         {
             // State = new GameState();
-            money = 1000;
+            money = 10;
             // Register that when we spawn minion we reduce our money
             EventManager.Instance.OnMinionSpawned += (_, x) => money = SafeMinus(money, 1);
+            
+            EventManager.Instance.OnMinionKilled += (_, x, killer) => money += 2;
         }
 
         private uint SafeMinus(uint x, uint dx)
