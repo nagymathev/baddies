@@ -14,6 +14,7 @@ ToDo list, in more or less priority order:
     have some goal
 - click to spawn zombie**
 - find or make graphics: zombie, player, level
+- audio
 - game rules (gameplay.cs):
     detect player reaching their goal, load next level
     detect player dying, game over(yaaay!)
