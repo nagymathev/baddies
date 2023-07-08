@@ -10,7 +10,9 @@ public class Enemy : MonoBehaviour
     public bool checkVisibility;
     public float maxSpeed = 5.0f;
 
-    public Transform target;
+	public float eyeHeight = 1.5f;
+
+	public Transform target;
     public Vector3 lastTargetPos;
     public Vector3 targetVel;
 
@@ -35,37 +37,19 @@ public class Enemy : MonoBehaviour
                 target = go.transform;
         }
 
-        agent.updatePosition = false;
-        agent.updateRotation = false;
+		if (agent)
+		{
+			agent.updatePosition = false;
+			agent.updateRotation = false;
+		}
     }
 
     void FixedUpdate ()
     {
 		// every frame...
-        agent.velocity = body.velocity;
-        if (agent.hasPath)
-        {
-            int n = 1;
-            Vector3 targetPos = agent.path.corners[n];
-            //while (n < agent.path.corners.Length-1 && (targetPos - body.position).magnitude < 2.0f)
-            //{
-            //    targetPos = agent.path.corners[n];
-            //    n++;
-            //}
-            //Vector3 moveDir = Vector3.ClampMagnitude(targetPos - body.position, 3.0f);
-            //Debug.DrawRay(body.position, moveDir, Color.red);
-            Vector3 targetVel = (targetPos - body.position);
-            targetVel.y = 0.0f;
-            if (targetVel.magnitude < 1.0f && targetVel.sqrMagnitude > 0.0001f)
-                targetVel = targetVel.normalized * maxSpeed;
-            else
-                targetVel = Vector3.ClampMagnitude(targetVel, maxSpeed);    //max speed
-            Vector3 v = targetVel - body.velocity;
-            v.y = 0;
-            body.AddForce(Vector3.ClampMagnitude(v / 0.05f, 10.0f));
-        }
+		UpdateAgent();
 
-        Debug.DrawLine(transform.position, lastTargetPos, Color.white);
+        //Debug.DrawLine(transform.position, lastTargetPos, Color.white);
 
 		// the rest only at lower frequency (every 0.5 sec, see below)
         if (timer > 0)
@@ -77,8 +61,8 @@ public class Enemy : MonoBehaviour
 
         if (target != null)
         {
-            Vector3 here = transform.position + Vector3.up;
-            Vector3 there = target.position + Vector3.up;
+            Vector3 here = transform.position + Vector3.up * eyeHeight;
+            Vector3 there = target.position + Vector3.up * eyeHeight;
 
             if (checkVisibility && Physics.Raycast(here, there - here, (there - here).magnitude - 1.0f))
             {//behind cover
@@ -114,13 +98,44 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void OnDeath()
+	void UpdateAgent()
+	{
+		if (!agent) return;
+
+		// every frame...
+		agent.velocity = body.velocity + (body.position - agent.nextPosition) * 0.1f;
+		if (agent.hasPath)
+		{
+			int n = 1;
+			Vector3 targetPos = agent.path.corners[n];
+			//while (n < agent.path.corners.Length-1 && (targetPos - body.position).magnitude < 2.0f)
+			//{
+			//    targetPos = agent.path.corners[n];
+			//    n++;
+			//}
+			//Vector3 moveDir = Vector3.ClampMagnitude(targetPos - body.position, 3.0f);
+			//Debug.DrawRay(body.position, moveDir, Color.red);
+			Vector3 targetVel = (targetPos - body.position);
+			targetVel.y = 0.0f;
+			if (targetVel.magnitude < 1.0f && targetVel.sqrMagnitude > 0.0001f)
+				targetVel = targetVel.normalized * maxSpeed;
+			else
+				targetVel = Vector3.ClampMagnitude(targetVel, maxSpeed);    //max speed
+			Vector3 v = targetVel - body.velocity;
+			v.y = 0;
+			body.AddForce(Vector3.ClampMagnitude(v / 0.05f, 10.0f));
+		}
+	}
+
+	public void OnDeath()
     {
         this.enabled = false;
         agent.enabled = false;
+
         body.constraints = RigidbodyConstraints.None;
         body.AddTorque(Random.onUnitSphere * 20.0f);
         body.AddForce(Random.insideUnitSphere * 100.0f);
+
         GameObject.Destroy(this.gameObject, 0.5f);
 
         if (onDeath != null)

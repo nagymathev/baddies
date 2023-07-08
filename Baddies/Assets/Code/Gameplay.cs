@@ -10,7 +10,7 @@ public class Gameplay : MonoBehaviour
 
 	public List<GameObject> players =  new List<GameObject>();
 	public List<GameObject> monsters = new List<GameObject>();
-
+	public List<GameObject> goals = new List<GameObject>(); //incl. pickups
 
 	//ToDo: direct some kind of enemy waves
 	public enum State
@@ -58,6 +58,11 @@ public class Gameplay : MonoBehaviour
 		singleton.monsters.Add(go);
 		EventListener.Get(go).OnDestroyDelegate += OnDestroyMonster;
 	}
+	public static void AddGoal(GameObject go)
+	{
+		singleton.goals.Add(go);
+		EventListener.Get(go).OnDestroyDelegate += OnDestroyGoal;
+	}
 
 	static void OnDestroyPlayer(GameObject go)
 	{
@@ -66,6 +71,10 @@ public class Gameplay : MonoBehaviour
 	static void OnDestroyMonster(GameObject go)
 	{
 		singleton.monsters.Remove(go);
+	}
+	static void OnDestroyGoal(GameObject go)
+	{
+		singleton.goals.Remove(go);
 	}
 
 

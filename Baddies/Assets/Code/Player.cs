@@ -11,13 +11,10 @@ public class Player : MonoBehaviour
 	public bool real_input;
     public GamepadInput.GamePad.Index gamePadIndex;
 
-	public float eyeHeight = 1.5f;
-	public float timer;
-	public Vector2 aimOffset;
-	public Vector2 randomMove;
-
 	public Rigidbody body;
-    public Transform leftShoulder;
+	public UnityEngine.AI.NavMeshAgent agent;
+
+	public Transform leftShoulder;
     public Transform rightShoulder;
     public Quaternion inputRotation = Quaternion.identity;
 
@@ -60,39 +57,54 @@ public class Player : MonoBehaviour
     float stepTimer;
     float dashTimer;
 
-	//AI
+	public enum ObjectType
+	{
+		Unknown,
+		Monster,
+		Goal,
+		PickUp
+	}
+
+
+	//Ai work variables
+	public int maxKnownObjects = 10;
+	public float eyeHeight = 1.5f;
+
 	[System.Serializable]
 	public class KnownObject
 	{
 		public GameObject go;
 		public float priority;
 		public float distance;
+		public ObjectType type;
 	}
 	public List<KnownObject> knownObjects = new List<KnownObject>();
-	public int maxKnownObjects = 10;
 
-
+	public float timer;
+	public Vector2 aimOffset;
+	public Vector2 randomMove;
+	public Vector3 desiredMove;
 
 
 	void Start ()
     {
 		Gameplay.AddPlayer(this.gameObject);
 		body = GetComponent<Rigidbody>();
+		agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+		if (agent)
+		{
+			agent.updatePosition = false;
+			agent.updateRotation = false;
+		}
 	}
-	
+
 	void FixedUpdate ()
     {
 		UpdateInputs();
 
-		//ToDo: replace with AI.
-		// first of all, need to see monsters and powerups (and goals; each level needs some goal to reach)
-		// priority #1: survive
-		//   detect getting attacked and react by doing something (run away or attack back)
-		//   prioritise visible(shootable) enemies, powerups, goal(s)
-		//   interact with the highest priority item (enemy:shoot. powerup/goal: go to)
-		// explore if can't see anything?
-
 		UpdateAI();
+
+		UpdateAgent();
 
 		if (inputs.Start && !inputsLast.Start)
             Time.timeScale = (Time.timeScale == 1.0f) ? sloMoScale : 1.0f;
@@ -184,25 +196,49 @@ public class Player : MonoBehaviour
 	{
 		if (!AI) return;
 
+		// first of all, need to see monsters and powerups (and goals; each level needs some goal to reach)
+		// priority #1: survive
+		//   detect getting attacked and react by doing something (run away or attack back)
+		//   prioritise visible(shootable) enemies, powerups, goal(s)
+		//   interact with the highest priority item (enemy:shoot. powerup/goal: go to)
+		// explore if can't see anything?
+		// vision to see empty space vs obstacles (incl. static environment and monsters) and move towards empty space
+		// use navmeshAgent to try and move towards goal when not running away from monsters
+
+		Vector3 here = transform.position + Vector3.up * eyeHeight;
+
 		//vision to potentially spot new objects
 		{
 			GameObject go = null;
-			//for now only monsters
-			int nMonsters = Gameplay.singleton.monsters.Count;
-			if (nMonsters > 0)
-				go = Gameplay.singleton.monsters[Random.Range(0, 1000) % nMonsters];
+			int num = Gameplay.singleton.monsters.Count + Gameplay.singleton.goals.Count;
+			if (num > 0)
+			{
+				int i = Random.Range(0, 1000) % num;
+				int nMon = Gameplay.singleton.monsters.Count;
+				go = i < nMon ? Gameplay.singleton.monsters[i]
+					: Gameplay.singleton.goals[i - nMon];
+			}
 			if (go)
 			{
-				if (knownObjects.FindIndex(ko => ko.go == go) < 0) //don't add already known one
-				{
+				if (knownObjects.FindIndex(ko => ko.go == go) < 0)
+				{//not known yet
 					KnownObject ko = new KnownObject();
 					ko.go = go;
+					ko.type = go.GetComponent<Enemy>() ? ObjectType.Monster :
+							go.GetComponent<PickUp>() ? ObjectType.PickUp :
+							ObjectType.Unknown;
 					knownObjects.Add(ko);
 				}
 			}
 		}
 
-		Vector3 here = transform.position + Vector3.up * eyeHeight;
+		//spatial vision
+		//if we represent empty space and static geometry as knownobject, priority might help clean up
+/*		Vector3 dir = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.up) * Vector3.forward;
+		if (Physics.Raycast(here, dir, 10.0f))
+		{
+		}
+*/
 
 		//update priorities and visibility of known objects
 		for (int i= knownObjects.Count-1; i>=0; i--)
@@ -217,7 +253,16 @@ public class Player : MonoBehaviour
 				continue;
 			}
 			ko.distance = (there - here).magnitude;
-			ko.priority = 1.0f / ko.distance;
+			switch(ko.type)
+			{
+				case ObjectType.Goal:
+					ko.priority = (1.0f / ko.distance) * 5.0f; //5 times higher
+					break;
+
+				default:
+					ko.priority = 1.0f / ko.distance;
+					break;
+			}
 
 			Debug.DrawLine(here, there, Color.Lerp(Color.red, Color.green, Mathf.Clamp01(ko.priority)));
 		}
@@ -233,11 +278,26 @@ public class Player : MonoBehaviour
 			GameObject go = ko.go;
 			Vector3 there = go.transform.position + Vector3.up;
 
-			Vector3 toItLocal = Quaternion.Inverse(transform.rotation) * (there - here);
-			toItLocal = Vector3.ClampMagnitude(toItLocal, 1.0f);
-			//inputs.ls = new Vector2(toItLocal.x, toItLocal.z) + Random.insideUnitCircle * 0.1f;
-			inputs.rs = new Vector2(toItLocal.x, toItLocal.z) + aimOffset; 
-			/*inputs.LT = */inputs.RT = true;
+			switch (ko.type)
+			{
+				case ObjectType.Monster:
+					Vector3 toItLocal = Quaternion.Inverse(transform.rotation) * (there - here);
+					toItLocal = Vector3.ClampMagnitude(toItLocal, 1.0f);
+					//inputs.ls = new Vector2(toItLocal.x, toItLocal.z) + Random.insideUnitCircle * 0.1f;
+					inputs.rs = new Vector2(toItLocal.x, toItLocal.z) + aimOffset;
+					/*inputs.LT = */
+					inputs.RT = true;
+					break;
+
+				case ObjectType.PickUp:
+					agent.SetDestination(go.transform.position);
+					inputs.rs = Vector2.zero;
+					inputs.RT = false;
+					break;
+
+				default:
+					break;
+			}
 		} else
 		{
 			//inputs.ls = Vector2.zero;
@@ -246,19 +306,44 @@ public class Player : MonoBehaviour
 		}
 
 		//stay away from enemies
-		Vector3 desiredMove = randomMove;
-		float minDistance = 10.0f;
+		desiredMove = Vector3.zero;
+		float minMonsterDistance = 10.0f;
 		for (int i = knownObjects.Count - 1; i >= 0; i--)
 		{
-			KnownObject ko = knownObjects[0];
+			KnownObject ko = knownObjects[i];
 			GameObject go = ko.go;
-			if (ko.distance > minDistance) continue;
-			float f = (minDistance - ko.distance);
 			Vector3 there = go.transform.position + Vector3.up;
-			desiredMove -= (there - here).normalized * f;
+			switch (ko.type)
+			{
+				case ObjectType.Monster:
+					if (ko.distance > minMonsterDistance) continue;
+					float f = (minMonsterDistance - ko.distance);
+					desiredMove += (there - here).normalized * -f; //away
+					break;
+
+				case ObjectType.Goal:
+					desiredMove += (there - here).normalized; //towards
+					break;
+
+				default:
+					break;
+			}
 		}
-		Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
-		inputs.ls = new Vector2(desMoveLocal.x, desMoveLocal.z);
+		if (desiredMove != Vector3.zero)
+		{
+			Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
+			inputs.ls = new Vector2(desMoveLocal.x, desMoveLocal.z);
+			agent.isStopped = true; //cancel path
+		} else
+		{//nothing to run away from
+			int i = knownObjects.FindIndex(ko => ko.type == ObjectType.Goal);
+			if (i >= 0)
+			{
+				KnownObject ko = knownObjects[i];
+				agent.SetDestination(ko.go.transform.position);
+			}
+		}
+		inputs.ls = Vector2.ClampMagnitude(inputs.ls + InputFromAgent(), 1.0f);
 
 		// the rest only at lower frequency (every 0.5 sec, see below)
 		if (timer > 0)
@@ -270,6 +355,42 @@ public class Player : MonoBehaviour
 
 		aimOffset = Random.insideUnitCircle * 0.2f;
 		randomMove = Random.insideUnitCircle * 0.2f;
+	}
+
+	void UpdateAgent()
+	{
+		if (!agent) return;
+
+		// every frame...
+		//Debug.DrawRay(agent.nextPosition, Vector3.up * 3.0f, Color.green);
+		agent.velocity = body.velocity + (body.position - agent.nextPosition) * 0.8f;
+		Debug.DrawRay(agent.nextPosition, agent.velocity, Color.green);
+	}
+
+	Vector2 InputFromAgent()
+	{
+		if (!agent.hasPath) return Vector2.zero;
+
+		int n = 1;
+		Vector3 targetPos = agent.path.corners[n];
+		//while (n < agent.path.corners.Length-1 && (targetPos - body.position).magnitude < 2.0f)
+		//{
+		//    targetPos = agent.path.corners[n];
+		//    n++;
+		//}
+		//Vector3 moveDir = Vector3.ClampMagnitude(targetPos - body.position, 3.0f);
+		//Debug.DrawRay(body.position, moveDir, Color.red);
+		Vector3 targetVel = (targetPos - body.position);
+		targetVel.y = 0.0f;
+		if (targetVel.magnitude < 1.0f && targetVel.sqrMagnitude > 0.0001f)
+			targetVel = targetVel.normalized * maxSpeed;
+		else
+			targetVel = Vector3.ClampMagnitude(targetVel, maxSpeed);    //max speed
+		Vector3 v = targetVel - body.velocity;
+		v.y = 0;
+		//body.AddForce(Vector3.ClampMagnitude(v / 0.05f, 10.0f));
+		Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(v, 1.0f);
+		return new Vector2(desMoveLocal.x, desMoveLocal.z);
 	}
 
 	void UpdateInputs()
@@ -395,10 +516,13 @@ public class Player : MonoBehaviour
     public void OnDeath()
     {
         this.enabled = false;
-        //agent.enabled = false;
+		if (agent)
+			agent.enabled = false;
+
         body.constraints = RigidbodyConstraints.None;
         body.AddTorque(Random.onUnitSphere * 20.0f);
         body.AddForce(Random.insideUnitSphere * 100.0f);
+
         //GameObject.Destroy(this.gameObject, 0.5f);
 
         if (onDeath != null)

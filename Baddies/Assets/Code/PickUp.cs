@@ -8,7 +8,7 @@ public class PickUp : MonoBehaviour
 
 	void Start ()
     {
-		
+		Gameplay.AddGoal(this.gameObject);
 	}
 	
 	void FixedUpdate ()
