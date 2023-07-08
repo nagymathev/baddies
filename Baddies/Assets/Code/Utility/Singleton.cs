@@ -1,11 +1,13 @@
 ﻿using System;
 using JetBrains.Annotations;
+using UnityEngine;
 
 namespace Code.Utility
 {
-    public class Singleton<T> where T : class, new()
+    public class Singleton<T>: MonoBehaviour 
+        where T : Singleton<T>
     {
-        private static T instance = new T();
+        private static T instance;
         public static T Instance => instance;
         public bool IsInitialized = false;
 

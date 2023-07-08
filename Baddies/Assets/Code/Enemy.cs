@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Code.GameState;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -138,6 +139,7 @@ public class Enemy : MonoBehaviour
         body.AddForce(Random.insideUnitSphere * 100.0f);
 
         GameObject.Destroy(this.gameObject, 0.5f);
+        EventManager.Instance.MinionKilled(this, this, null);
 
         if (onDeath != null)
             GameObject.Instantiate(onDeath, transform.position, transform.rotation);
