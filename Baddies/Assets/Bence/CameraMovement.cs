@@ -12,7 +12,7 @@ public class CameraMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -31,13 +31,20 @@ public class CameraMovement : MonoBehaviour
         //mouseInput = Vector3.ClampMagnitude(combinedInput, 1);
 
         this.transform.position += q * combinedInput * Time.deltaTime * cameraMovementSpeed;
+
+        //q.eulerAngles = cameraRotation + new Vector3(0, Input.GetAxisRaw("QE_Rotation") * cameraTurnSpeed, 0);
+        //this.transform.rotation = q;
+        this.transform.rotation *= Quaternion.AngleAxis(Input.GetAxisRaw("QE_Rotation") * cameraTurnSpeed * Time.deltaTime, Vector3.up);
+
+
         //this.transform.position += q * Vector3.forward * Input.GetAxisRaw("Vertical")*Time.deltaTime * cameraMovementSpeed;
         //this.transform.position += q * Vector3.right * Input.GetAxisRaw("Horizontal")*Time.deltaTime * cameraMovementSpeed;
         //this.transform.position += new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
 
+        //Dragging
         /*if (Input.GetKey(KeyCode.Mouse1))
         {
-            this.transform.position += q * mouseInput * cameraMovementSpeed;
+            //this.transform.position += q * mouseInput * cameraMovementSpeed;
         }*/
     }
 }
