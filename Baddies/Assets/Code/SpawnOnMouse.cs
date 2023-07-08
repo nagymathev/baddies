@@ -11,12 +11,19 @@ public class SpawnOnMouse : MonoBehaviour
     [Tooltip("The distance for the raycast hit, or other debugging lines")]
     private const float _pointDistance = 100f;
 
+    [Tooltip("The amount of cooldown between spawning enemies")]
+    [SerializeField] private float _spawnCooldown = 1f;
+    private float _cooldownStartTime;
+    [SerializeField] private bool _isOnCoolDown;
+
     [SerializeField] private Enemy _enemyPrefab;
 
     [Tooltip("The audio that plays when the player can spawn enemies")]
-    [SerializeField] private AudioClip _canSpawnAudio;
+    [SerializeField] private GameObject _canSpawnAudio;
     [Tooltip("The audio that plays when the player cannot spawn enemies")]
-    [SerializeField] private AudioClip _cannotSpawnAudio;
+    [SerializeField] private GameObject _cannotSpawnAudio;
+    [Tooltip("The audio that plays when the spawning is on cooldown")]
+    [SerializeField] private GameObject _onCooldownAudio;
     void Start()
     {
         _camera = GetComponent<Camera>();
@@ -32,7 +39,18 @@ public class SpawnOnMouse : MonoBehaviour
         var worldPoint = _camera.ScreenToWorldPoint(_mousePos);
         Debug.DrawLine(transform.position, worldPoint, Color.magenta, 0.1f);
 
-        if (Input.GetMouseButtonDown(0)) ShootRaycast(worldPoint);
+        _isOnCoolDown = (Time.time - _cooldownStartTime) / _spawnCooldown <= _spawnCooldown;
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (!_isOnCoolDown)
+            {
+                ShootRaycast(worldPoint);
+            }
+            else
+            {
+                PlayAudio(_onCooldownAudio);
+            }
+        }
     }
 
     private void ShootRaycast(Vector3 worldPoint)
@@ -50,6 +68,7 @@ public class SpawnOnMouse : MonoBehaviour
             return;
         }
         SpawnEnemy(hit.point);
+        _cooldownStartTime = Time.time;
     }
 
     private void SpawnEnemy(Vector3 spawnPoint)
@@ -59,11 +78,11 @@ public class SpawnOnMouse : MonoBehaviour
         var obj = Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
         EventManager.Instance.MinionSpawned(this, obj);
         obj.gameObject.SetActive(true);
-        AudioSource.PlayClipAtPoint(_canSpawnAudio, transform.position);
+        PlayAudio(_canSpawnAudio);
     }
 
-    private void PlayAudio(AudioClip audio)
+    private void PlayAudio(GameObject audioPrefab)
     {
-        AudioSource.PlayClipAtPoint(audio, transform.position);
+        Instantiate(audioPrefab, transform.position, transform.rotation, transform);
     }
 }

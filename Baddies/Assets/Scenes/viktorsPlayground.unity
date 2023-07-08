@@ -6317,9 +6317,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 645f2fe8d6fc9db43bd759494e5e0b2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _spawnCooldown: 1
+  _isOnCoolDown: 0
   _enemyPrefab: {fileID: 1518272683668344, guid: bbe880461cd80914a944e4b9a1c42fc4, type: 3}
-  _canSpawnAudio: {fileID: 8300000, guid: 3ad4f2ffaab6ce7418e51139eb9fc81f, type: 3}
-  _cannotSpawnAudio: {fileID: 8300000, guid: 3f9aef6aae2281e4489d266189117b0d, type: 3}
+  _canSpawnAudio: {fileID: 587907210379714362, guid: 60881e0059d713a4189f97bc4acaa94f, type: 3}
+  _cannotSpawnAudio: {fileID: 587907210379714362, guid: dd20d8f265d64df40843efb7d6013d11, type: 3}
 --- !u!1001 &1710057899
 PrefabInstance:
   m_ObjectHideFlags: 0
