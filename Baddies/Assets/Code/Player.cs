@@ -308,7 +308,7 @@ public class Player : MonoBehaviour
 			}
 		} else
 		{
-			//inputs.ls = Vector2.zero;
+			inputs.ls = Vector2.zero;
 			inputs.rs = Vector2.zero;
 			inputs.LT = inputs.RT = false;
 		}
@@ -357,6 +357,7 @@ public class Player : MonoBehaviour
 				agent.SetDestination(ko.go.transform.position);
 			}
 		}
+
 		inputFromAgent = InputFromAgent();
 		inputs.ls = Vector2.ClampMagnitude(inputs.ls + inputFromAgent, 1.0f);
 
@@ -370,6 +371,16 @@ public class Player : MonoBehaviour
 
 		aimOffset = Random.insideUnitCircle * 0.2f;
 		randomMove = Random.insideUnitCircle * 0.2f;
+
+		if (knownObjects.Count == 0)
+		{
+			//explore
+			if (Random.value < 0.1f) //about once every 5 seconds
+			{
+				Vector2 offset = Random.insideUnitCircle * 10.0f;
+				agent.SetDestination(transform.position + new Vector3(offset.x, 0, offset.y));
+			}
+		}
 	}
 
 	void AddKnownObject(GameObject go)
@@ -411,13 +422,14 @@ public class Player : MonoBehaviour
 		//Debug.DrawRay(body.position, moveDir, Color.red);
 
 		//Debug.DrawLine(targetPos, body.position, Color.blue);
-/*		Vector3 targetVel = (targetPos - body.position);
-		targetVel.y = 0.0f;
-		if (targetVel.magnitude < 1.0f && targetVel.sqrMagnitude > 0.0001f)
-			targetVel = targetVel.normalized * maxSpeed;
-		else
-			targetVel = Vector3.ClampMagnitude(targetVel * maxSpeed, maxSpeed);    //max speed
-*/
+		/*		Vector3 targetVel = (targetPos - body.position);
+				targetVel.y = 0.0f;
+				if (targetVel.magnitude < 1.0f && targetVel.sqrMagnitude > 0.0001f)
+					targetVel = targetVel.normalized * maxSpeed;
+				else
+					targetVel = Vector3.ClampMagnitude(targetVel * maxSpeed, maxSpeed);    //max speed
+		*/
+		Debug.DrawRay(agent.nextPosition, agent.desiredVelocity, Color.magenta);
 		Vector3 targetVel = Vector3.ClampMagnitude(agent.desiredVelocity + (agent.nextPosition - body.position) * 3.0f, maxSpeed);
 		Debug.DrawRay(body.position, targetVel, Color.cyan);
 		//Vector3 v = targetVel - body.velocity;
