@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Code.GameState;
 using UnityEngine;
 
 public class SpawnOnMouse : MonoBehaviour
@@ -10,7 +11,7 @@ public class SpawnOnMouse : MonoBehaviour
     [Tooltip("The distance for the raycast hit, or other debugging lines")]
     [SerializeField] private float _pointDistance = 30f;
 
-    [SerializeField] private GameObject _enemyPrefab;
+    [SerializeField] private Enemy _enemyPrefab;
     void Start()
     {
         _camera = GetComponent<Camera>();
@@ -38,6 +39,10 @@ public class SpawnOnMouse : MonoBehaviour
 
     private void SpawnEnemy(Vector3 spawnPoint)
     {
-        Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
+        if(!StateBehaviour.Instance.CanSpawnMinion(this, _enemyPrefab)) return;
+        
+        var obj = Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
+        EventManager.Instance.MinionSpawned(this, obj);
+        obj.gameObject.SetActive(true);
     }
 }
