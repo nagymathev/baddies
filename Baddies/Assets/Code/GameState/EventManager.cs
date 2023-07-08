@@ -7,8 +7,6 @@ namespace Code.GameState
 {
     public class EventManager: Singleton<EventManager>
     {
-        public EventManager([CanBeNull] Action<EventManager> initializer) : base(initializer)
-        { }
 
         public EventManager()
         { }

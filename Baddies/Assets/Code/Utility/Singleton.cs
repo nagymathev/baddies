@@ -7,24 +7,12 @@ namespace Code.Utility
     public class Singleton<T>: MonoBehaviour 
         where T : Singleton<T>
     {
-        private static T instance;
-        public static T Instance => instance;
-        public bool IsInitialized = false;
+        private static Lazy<T> instance = new Lazy<T>(() => FindObjectOfType<T>() ?? Instantiate(new GameObject(typeof(T).Name)).AddComponent<T>());
+        public static T Instance => instance.Value;
 
         static Singleton()
         {
             // Static constructor to initialize the instance
-        }
-        
-        public Singleton()
-        {
-            IsInitialized = true;
-        }
-
-        public Singleton([CanBeNull] Action<T> initializer): this()
-        {
-            initializer ??= (x => {});
-            initializer(instance);
         }
     }
 
