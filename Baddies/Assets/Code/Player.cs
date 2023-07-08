@@ -88,6 +88,7 @@ public class Player : MonoBehaviour
 	public Vector2 randomMove;
 	public Vector3 desiredMove;
 	public Vector2 inputFromAgent;
+	public bool agentHasPath;
 
 	void Start ()
     {
@@ -403,7 +404,10 @@ public class Player : MonoBehaviour
 
 		// every frame...
 		//Debug.DrawRay(agent.nextPosition, Vector3.up * 3.0f, Color.green);
-		agent.velocity = body.velocity + (body.position - agent.nextPosition) * 0.8f;
+		if (!agent.hasPath)
+		{
+			agent.velocity = body.velocity + (body.position - agent.nextPosition) * 0.8f;
+		}
 		Debug.DrawRay(agent.nextPosition, agent.velocity, Color.green);
 	}
 
