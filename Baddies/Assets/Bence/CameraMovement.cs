@@ -12,6 +12,7 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float _cameraZoomSpeed = 10;
     [SerializeField] private float _cameraDragSpeed = 1;
     [SerializeField] private float _cameraMouseSensitivity = 3;
+    private float _zoomLevel;
 
     // Start is called before the first frame update
     void Start()
@@ -34,10 +35,12 @@ public class CameraMovement : MonoBehaviour
         // Zoom In and Out
         camera.transform.Translate(new Vector3(0, 0, Input.GetAxisRaw("Mouse ScrollWheel") * _cameraZoomSpeed), Space.Self);
 
-		//Dragging
+        _zoomLevel = (transform.position - camera.transform.position).magnitude;
+
+		//Dragging / Panning
 		if (Input.GetMouseButton(1))
         {
-            transform.position += rotation * new Vector3(-Input.GetAxisRaw("Mouse X"), 0 , -Input.GetAxisRaw("Mouse Y")) * _cameraDragSpeed;
+            transform.position += rotation * new Vector3(-Input.GetAxisRaw("Mouse X"), 0 , -Input.GetAxisRaw("Mouse Y")) * ((_zoomLevel + _cameraDragSpeed) / 10);
         }
 
         if (Input.GetMouseButton(2))
