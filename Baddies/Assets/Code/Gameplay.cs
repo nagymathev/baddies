@@ -231,7 +231,7 @@ public class Gameplay : MonoBehaviour
     IEnumerator Intro()
     {
         yield return StartCoroutine(FlashText("", 0.1f));
-        yield return StartCoroutine(FlashText("INFINITE", 0.6f));
+/*        yield return StartCoroutine(FlashText("INFINITE", 0.6f));
         yield return StartCoroutine(FlashText("AMMO", 0.6f));
         yield return StartCoroutine(FlashText("", 0.6f));
 
@@ -249,22 +249,7 @@ public class Gameplay : MonoBehaviour
 
         yield return StartCoroutine(FlashText("GOOD", 0.45f));
         yield return StartCoroutine(FlashText("LUCK", 0.45f));
-
-        /*
-        textMid.text = "INFINITE";
-        for (float a = 1; a >= 0; a -= Time.deltaTime / 1.0f)
-        {
-            textMid.color = new Color(1, 1, 1, a);
-            yield return new WaitForEndOfFrame();
-        }
-
-        textMid.text = "AMMO";
-        for (float a = 1; a >= 0; a -= Time.deltaTime / 1.0f)
-        {
-            textMid.color = new Color(1, 1, 1, a);
-            yield return new WaitForEndOfFrame();
-        }
-        */
+*/
         textMid.text = "";
     }
 
