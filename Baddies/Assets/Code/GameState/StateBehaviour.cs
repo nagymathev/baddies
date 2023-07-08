@@ -13,7 +13,13 @@ namespace Code.GameState
             // State = new GameState();
             money = 1000;
             // Register that when we spawn minion we reduce our money
-            EventManager.Instance.OnMinionSpawned += (_, x) => money -= 1;
+            EventManager.Instance.OnMinionSpawned += (_, x) => money = SafeMinus(money, 1);
+        }
+
+        private uint SafeMinus(uint x, uint dx)
+        {
+            if (x < dx) return 0;
+            return x - dx;
         }
         
         public bool CanSpawnMinion(object caller, Enemy minion)
