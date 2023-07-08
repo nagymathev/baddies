@@ -2797,6 +2797,7 @@ GameObject:
   m_Component:
   - component: {fileID: 820518546}
   - component: {fileID: 820518545}
+  - component: {fileID: 820518547}
   m_Layer: 0
   m_Name: CameraRigSmooth
   m_TagString: Untagged
@@ -2811,12 +2812,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 820518544}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3db91d9b6ab477041b2a158e7652de3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 414298315}
+  target: {fileID: 0}
   linear: 1
   angular: 1
   lastPosition: {x: 0, y: 0, z: 0}
@@ -2833,8 +2834,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 820518544}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 17.66, z: -19.71}
+  m_LocalRotation: {x: -0.20471512, y: 0.11348449, z: 0.023903029, w: 0.9719268}
+  m_LocalPosition: {x: -0.55, y: 0, z: -39.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2845,7 +2846,22 @@ Transform:
   - {fileID: 1342353188}
   m_Father: {fileID: 0}
   m_RootOrder: 10
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -23.788, y: 13.32, z: 0}
+--- !u!114 &820518547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 820518544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d33b958133a7454d84eb99f088885aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  camera: {fileID: 1689638639}
+  cameraMovementSpeed: 25
+  cameraTurnSpeed: 3
 --- !u!1001 &849554446
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6245,7 +6261,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1689638639}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 11.04, z: 0.17000008}
+  m_LocalPosition: {x: 0, y: 16.12, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6970,18 +6986,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cc3293ce1bef3746ba4732ce8f447c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_leaderboardName: MatrixHallway
-  scoreType: 3
-  biggerIsBetter: 1
-  downloading: 0
-  downloadCompleted: 0
-  uploading: 0
-  uploadCompleted: 0
-  m_sortedScores: []
-  xPos: 10
-  yPos: 10
-  xInc: 150
-  yInc: 13
 --- !u!1001 &1826965484
 PrefabInstance:
   m_ObjectHideFlags: 0
