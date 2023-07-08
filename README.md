@@ -28,3 +28,14 @@ ToDo list, in more or less priority order:
 *from our point of view, the enemy; let's call him HERO instead
 
 **only calling them zombie for now, depending on what visuals/setting we end up with might be an orc, german, monster, robot, whatever. Our grunts.
+
+
+TOMORROW:
+- build an "actual" level with proper graphics, navmesh, and the working prefabs,
+- enable/fix spawning with mouse
+- make other types of pickup for the player, at least...\
+      EXIT (if the player reaches it, monsters failed, next level)\
+      ...but potentially also weapon upgrades, whatever we can
+- update the UI and the game rules / announcements
+- add some limits on spawning (number of monsters, out of sight of player)
+- make a few more levels
