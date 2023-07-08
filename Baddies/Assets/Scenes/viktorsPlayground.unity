@@ -2860,8 +2860,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   camera: {fileID: 1689638639}
-  cameraMovementSpeed: 25
-  cameraTurnSpeed: 60
+  _cameraMovementSpeed: 25
+  _cameraTurnSpeed: 60
+  _cameraZoomSpeed: 10
 --- !u!1001 &849554446
 PrefabInstance:
   m_ObjectHideFlags: 0
