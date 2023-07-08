@@ -248,7 +248,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camera: {fileID: 514848179}
   cameraMovementSpeed: 25
-  cameraTurnSpeed: 3
+  cameraTurnSpeed: 100
 --- !u!4 &130127971
 Transform:
   m_ObjectHideFlags: 0
@@ -256,7 +256,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 130127969}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: 0.2431104, z: -0, w: 0.96999866}
   m_LocalPosition: {x: 5.09, y: 0, z: -29.99}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -264,7 +264,7 @@ Transform:
   - {fileID: 514848182}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 28.14, z: 0}
 --- !u!1001 &209130204
 PrefabInstance:
   m_ObjectHideFlags: 0
