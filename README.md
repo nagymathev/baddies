@@ -26,4 +26,5 @@ ToDo list, in more or less priority order:
 
 
 *from our point of view, the enemy; let's call him HERO instead
+
 **only calling them zombie for now, depending on what visuals/setting we end up with might be an orc, german, monster, robot, whatever. Our grunts.
