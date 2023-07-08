@@ -10,6 +10,8 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] public float _cameraMovementSpeed = 25;
     [SerializeField] public float _cameraTurnSpeed = 60;
     [SerializeField] private float _cameraZoomSpeed = 10;
+    [SerializeField] private float _cameraDragSpeed = 1;
+    [SerializeField] private float _cameraMouseSensitivity = 3;
 
     // Start is called before the first frame update
     void Start()
@@ -35,7 +37,16 @@ public class CameraMovement : MonoBehaviour
 		//Dragging
 		if (Input.GetMouseButton(1))
         {
-            transform.position += rotation * new Vector3(-Input.GetAxisRaw("Mouse X"), 0 , -Input.GetAxisRaw("Mouse Y"));
+            transform.position += rotation * new Vector3(-Input.GetAxisRaw("Mouse X"), 0 , -Input.GetAxisRaw("Mouse Y")) * _cameraDragSpeed;
+        }
+
+        if (Input.GetMouseButton(2))
+        {
+            transform.Rotate(new Vector3(0, Input.GetAxisRaw("Mouse X") * _cameraMouseSensitivity, 0), Space.World);
+            transform.Rotate(new Vector3(-Input.GetAxisRaw("Mouse Y") * _cameraMouseSensitivity, 0, 0), Space.Self);
+            var angles = transform.rotation.eulerAngles;
+            transform.rotation = Quaternion.Euler(Mathf.Clamp(angles.x, 290, 350), angles.y, 0);
+            Debug.Log($"{angles.x}, {angles.y}");
         }
 
 		camera.transform.position += camera.transform.forward * Input.mouseScrollDelta.y;

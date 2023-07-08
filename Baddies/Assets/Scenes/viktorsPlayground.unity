@@ -2863,6 +2863,8 @@ MonoBehaviour:
   _cameraMovementSpeed: 25
   _cameraTurnSpeed: 60
   _cameraZoomSpeed: 10
+  _cameraDragSpeed: 1
+  _cameraMouseSensitivity: 3
 --- !u!1001 &849554446
 PrefabInstance:
   m_ObjectHideFlags: 0
