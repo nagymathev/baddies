@@ -7,9 +7,16 @@ using UnityEditor;
 
 public class Player : MonoBehaviour
 {
+	public bool AI;
+	public bool real_input;
     public GamepadInput.GamePad.Index gamePadIndex;
 
-    public Rigidbody body;
+	public float eyeHeight = 1.5f;
+	public float timer;
+	public Vector2 aimOffset;
+	public Vector2 randomMove;
+
+	public Rigidbody body;
     public Transform leftShoulder;
     public Transform rightShoulder;
     public Quaternion inputRotation = Quaternion.identity;
@@ -53,16 +60,41 @@ public class Player : MonoBehaviour
     float stepTimer;
     float dashTimer;
 
+	//AI
+	[System.Serializable]
+	public class KnownObject
+	{
+		public GameObject go;
+		public float priority;
+		public float distance;
+	}
+	public List<KnownObject> knownObjects = new List<KnownObject>();
+	public int maxKnownObjects = 10;
+
+
+
+
 	void Start ()
     {
-        body = GetComponent<Rigidbody>();
+		Gameplay.AddPlayer(this.gameObject);
+		body = GetComponent<Rigidbody>();
 	}
 	
 	void FixedUpdate ()
     {
-        UpdateInputs();
+		UpdateInputs();
 
-        if (inputs.Start && !inputsLast.Start)
+		//ToDo: replace with AI.
+		// first of all, need to see monsters and powerups (and goals; each level needs some goal to reach)
+		// priority #1: survive
+		//   detect getting attacked and react by doing something (run away or attack back)
+		//   prioritise visible(shootable) enemies, powerups, goal(s)
+		//   interact with the highest priority item (enemy:shoot. powerup/goal: go to)
+		// explore if can't see anything?
+
+		UpdateAI();
+
+		if (inputs.Start && !inputsLast.Start)
             Time.timeScale = (Time.timeScale == 1.0f) ? sloMoScale : 1.0f;
 
         if (inputs.Back)  //pressing (Back) for any other player is unspawn
@@ -120,15 +152,21 @@ public class Player : MonoBehaviour
 
         UpdateCameraRig();
 
-        UpdateGun(ref guns[0], inputs.LT);// && inputs.ls.magnitude > 0.1f);
-        UpdateGun(ref guns[1], inputs.RT);// && inputs.rs.magnitude > 0.1f);
+		if (guns.Length > 0)
+		{
+			UpdateGun(ref guns[0], inputs.RT);// && inputs.ls.magnitude > 0.1f);
+		} else
+		if (guns.Length > 1)
+		{
+			UpdateGun(ref guns[1], inputs.RT);// && inputs.rs.magnitude > 0.1f);
 
-        //slight hack to make it sound better ;)
-        if (inputs.LT && inputs.RT 
-            && Mathf.Abs(guns[0].reloadTimer - guns[1].reloadTimer) < guns[0].reloadTime * 0.4f)
-        {
-            guns[1].reloadTimer += guns[1].reloadTime * 0.1f;
-        }
+			//slight hack to make it sound better ;)
+			if (inputs.LT && inputs.RT
+				&& Mathf.Abs(guns[0].reloadTimer - guns[1].reloadTimer) < guns[0].reloadTime * 0.4f)
+			{
+				guns[1].reloadTimer += guns[1].reloadTime * 0.1f;
+			}
+		}
 
         if (dashTimer > 0)
         {
@@ -142,33 +180,131 @@ public class Player : MonoBehaviour
         inputsLast = inputs;
     }
 
-    void UpdateInputs()
+	void UpdateAI()
+	{
+		if (!AI) return;
+
+		//vision to potentially spot new objects
+		{
+			GameObject go = null;
+			//for now only monsters
+			int nMonsters = Gameplay.singleton.monsters.Count;
+			if (nMonsters > 0)
+				go = Gameplay.singleton.monsters[Random.Range(0, 1000) % nMonsters];
+			if (go)
+			{
+				if (knownObjects.FindIndex(ko => ko.go == go) < 0) //don't add already known one
+				{
+					KnownObject ko = new KnownObject();
+					ko.go = go;
+					knownObjects.Add(ko);
+				}
+			}
+		}
+
+		Vector3 here = transform.position + Vector3.up * eyeHeight;
+
+		//update priorities and visibility of known objects
+		for (int i= knownObjects.Count-1; i>=0; i--)
+		{
+			KnownObject ko = knownObjects[i];
+			GameObject go = ko.go;
+			if (!go) { knownObjects.RemoveAt(i); continue; }
+			Vector3 there = go.transform.position + Vector3.up * eyeHeight;
+			if (Physics.Raycast(here, there - here, (there - here).magnitude - 1.0f))
+			{//not visible
+				knownObjects.RemoveAt(i);
+				continue;
+			}
+			ko.distance = (there - here).magnitude;
+			ko.priority = 1.0f / ko.distance;
+
+			Debug.DrawLine(here, there, Color.Lerp(Color.red, Color.green, Mathf.Clamp01(ko.priority)));
+		}
+
+		knownObjects.Sort((p1, p2) => p2.priority.CompareTo(p1.priority));
+		while (knownObjects.Count > maxKnownObjects)
+			knownObjects.RemoveAt(knownObjects.Count - 1);
+
+		//at this point the highest priority one should be at the front
+		if (knownObjects.Count > 0)
+		{
+			KnownObject ko = knownObjects[0];
+			GameObject go = ko.go;
+			Vector3 there = go.transform.position + Vector3.up;
+
+			Vector3 toItLocal = Quaternion.Inverse(transform.rotation) * (there - here);
+			toItLocal = Vector3.ClampMagnitude(toItLocal, 1.0f);
+			//inputs.ls = new Vector2(toItLocal.x, toItLocal.z) + Random.insideUnitCircle * 0.1f;
+			inputs.rs = new Vector2(toItLocal.x, toItLocal.z) + aimOffset; 
+			/*inputs.LT = */inputs.RT = true;
+		} else
+		{
+			//inputs.ls = Vector2.zero;
+			inputs.rs = Vector2.zero;
+			inputs.LT = inputs.RT = false;
+		}
+
+		//stay away from enemies
+		Vector3 desiredMove = randomMove;
+		float minDistance = 10.0f;
+		for (int i = knownObjects.Count - 1; i >= 0; i--)
+		{
+			KnownObject ko = knownObjects[0];
+			GameObject go = ko.go;
+			if (ko.distance > minDistance) continue;
+			float f = (minDistance - ko.distance);
+			Vector3 there = go.transform.position + Vector3.up;
+			desiredMove -= (there - here).normalized * f;
+		}
+		Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
+		inputs.ls = new Vector2(desMoveLocal.x, desMoveLocal.z);
+
+		// the rest only at lower frequency (every 0.5 sec, see below)
+		if (timer > 0)
+		{
+			timer -= Time.fixedDeltaTime;
+			return;
+		}
+		timer += 0.5f;
+
+		aimOffset = Random.insideUnitCircle * 0.2f;
+		randomMove = Random.insideUnitCircle * 0.2f;
+	}
+
+	void UpdateInputs()
     {
 #if UNITY_EDITOR
         if (EditorApplication.isPaused)
             return;
 #endif
 
-            inputs.ls = GamepadInput.GamePad.GetAxis(GamepadInput.GamePad.Axis.LeftStick, gamePadIndex);
-        inputs.rs = GamepadInput.GamePad.GetAxis(GamepadInput.GamePad.Axis.RightStick, gamePadIndex);
-        inputs.LT = GamepadInput.GamePad.GetTrigger(GamepadInput.GamePad.Trigger.LeftTrigger, gamePadIndex) > 0.2f;
-        inputs.RT = GamepadInput.GamePad.GetTrigger(GamepadInput.GamePad.Trigger.RightTrigger, gamePadIndex) > 0.2f;
+		if (real_input)
+		{
+			inputs.ls = GamepadInput.GamePad.GetAxis(GamepadInput.GamePad.Axis.LeftStick, gamePadIndex);
+			inputs.rs = GamepadInput.GamePad.GetAxis(GamepadInput.GamePad.Axis.RightStick, gamePadIndex);
+			inputs.LT = GamepadInput.GamePad.GetTrigger(GamepadInput.GamePad.Trigger.LeftTrigger, gamePadIndex) > 0.2f;
+			inputs.RT = GamepadInput.GamePad.GetTrigger(GamepadInput.GamePad.Trigger.RightTrigger, gamePadIndex) > 0.2f;
 
-        inputs.A = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.A, gamePadIndex);
-        inputs.B = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.B, gamePadIndex);
-        inputs.X = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.X, gamePadIndex);
-        inputs.Y = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.Y, gamePadIndex);
-        inputs.LB = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.LeftShoulder, gamePadIndex);
-        inputs.RB = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.RightShoulder, gamePadIndex);
-        inputs.L3 = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.LeftStick, gamePadIndex);
-        inputs.R3 = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.RightStick, gamePadIndex);
+			inputs.A = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.A, gamePadIndex);
+			inputs.B = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.B, gamePadIndex);
+			inputs.X = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.X, gamePadIndex);
+			inputs.Y = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.Y, gamePadIndex);
+			inputs.LB = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.LeftShoulder, gamePadIndex);
+			inputs.RB = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.RightShoulder, gamePadIndex);
+			inputs.L3 = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.LeftStick, gamePadIndex);
+			inputs.R3 = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.RightStick, gamePadIndex);
 
-        inputs.Start = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.Start, gamePadIndex);
-        inputs.Back = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.Back, gamePadIndex);
+			inputs.Start = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.Start, gamePadIndex);
+			inputs.Back = GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.Back, gamePadIndex);
+		}
     }
+
 
     void UpdateCameraRig()
     {
+		if (!cameraRig) return;
+
         Vector3 targetPos = body.position;
         targetPos += body.velocity * 0.6f;
         targetPos += inputRotation * new Vector3(inputs.ls.x, 0, inputs.ls.y) * 2.0f;

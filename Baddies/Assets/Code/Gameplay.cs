@@ -6,8 +6,14 @@ using UnityEngine.SceneManagement;
 
 public class Gameplay : MonoBehaviour
 {
-    //ToDo: direct some kind of enemy waves
-    public enum State
+	public static Gameplay singleton;
+
+	public List<GameObject> players =  new List<GameObject>();
+	public List<GameObject> monsters = new List<GameObject>();
+
+
+	//ToDo: direct some kind of enemy waves
+	public enum State
     {
         Wait,
         Wave,
@@ -41,6 +47,33 @@ public class Gameplay : MonoBehaviour
     public AudioSource onWaveStart;
     public AudioSource music;
     public AudioSource onGameOver;
+
+	public static void AddPlayer(GameObject go)
+	{
+		singleton.players.Add(go);
+		EventListener.Get(go).OnDestroyDelegate += OnDestroyPlayer;
+	}
+	public static void AddMonster(GameObject go)
+	{
+		singleton.monsters.Add(go);
+		EventListener.Get(go).OnDestroyDelegate += OnDestroyMonster;
+	}
+
+	static void OnDestroyPlayer(GameObject go)
+	{
+		singleton.players.Remove(go);
+	}
+	static void OnDestroyMonster(GameObject go)
+	{
+		singleton.monsters.Remove(go);
+	}
+
+
+	void Awake()
+	{
+		if (singleton) { Destroy(this); return; }
+		singleton = this;
+	}
 
     void Start ()
     {
@@ -198,7 +231,7 @@ public class Gameplay : MonoBehaviour
     IEnumerator Intro()
     {
         yield return StartCoroutine(FlashText("", 0.1f));
-        yield return StartCoroutine(FlashText("INFINITE", 0.6f));
+/*        yield return StartCoroutine(FlashText("INFINITE", 0.6f));
         yield return StartCoroutine(FlashText("AMMO", 0.6f));
         yield return StartCoroutine(FlashText("", 0.6f));
 
@@ -216,22 +249,7 @@ public class Gameplay : MonoBehaviour
 
         yield return StartCoroutine(FlashText("GOOD", 0.45f));
         yield return StartCoroutine(FlashText("LUCK", 0.45f));
-
-        /*
-        textMid.text = "INFINITE";
-        for (float a = 1; a >= 0; a -= Time.deltaTime / 1.0f)
-        {
-            textMid.color = new Color(1, 1, 1, a);
-            yield return new WaitForEndOfFrame();
-        }
-
-        textMid.text = "AMMO";
-        for (float a = 1; a >= 0; a -= Time.deltaTime / 1.0f)
-        {
-            textMid.color = new Color(1, 1, 1, a);
-            yield return new WaitForEndOfFrame();
-        }
-        */
+*/
         textMid.text = "";
     }
 

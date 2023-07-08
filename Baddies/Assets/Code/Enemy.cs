@@ -21,7 +21,9 @@ public class Enemy : MonoBehaviour
 
 	void Start ()
     {
-        if (body == null)
+		Gameplay.AddMonster(this.gameObject);
+
+		if (body == null)
             body = GetComponent<Rigidbody>();
 
         timer = Random.Range(0, 0.5f);
@@ -39,6 +41,7 @@ public class Enemy : MonoBehaviour
 
     void FixedUpdate ()
     {
+		// every frame...
         agent.velocity = body.velocity;
         if (agent.hasPath)
         {
@@ -64,6 +67,7 @@ public class Enemy : MonoBehaviour
 
         Debug.DrawLine(transform.position, lastTargetPos, Color.white);
 
+		// the rest only at lower frequency (every 0.5 sec, see below)
         if (timer > 0)
         {
             timer -= Time.fixedDeltaTime;
@@ -78,7 +82,7 @@ public class Enemy : MonoBehaviour
 
             if (checkVisibility && Physics.Raycast(here, there - here, (there - here).magnitude - 1.0f))
             {//behind cover
-                targetVel = Vector3.zero;
+                targetVel = Vector3.zero; //stop
             } else
             {//can see
                 Vector3 targetPos = target.position;
