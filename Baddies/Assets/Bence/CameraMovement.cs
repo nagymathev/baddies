@@ -33,10 +33,10 @@ public class CameraMovement : MonoBehaviour
         camera.transform.Translate(new Vector3(0, 0, Input.GetAxisRaw("Mouse ScrollWheel") * _cameraZoomSpeed), Space.Self);
 
 		//Dragging
-		/*if (Input.GetKey(KeyCode.Mouse1))
+		if (Input.GetMouseButton(1))
         {
-            //this.transform.position += q * mouseInput * cameraMovementSpeed;
-        }*/
+            transform.position += rotation * new Vector3(-Input.GetAxisRaw("Mouse X"), 0 , -Input.GetAxisRaw("Mouse Y"));
+        }
 
 		camera.transform.position += camera.transform.forward * Input.mouseScrollDelta.y;
     }
