@@ -13,7 +13,7 @@ ToDo list, in more or less priority order:
     melee attack?
     have some goal
 - click to spawn zombie**
-- find or make graphics: zombie, player, level
+- find or make graphics: zombie, player, weapons, level building blocks (models and textures)
 - audio
 - game rules (gameplay.cs):
     detect player reaching their goal, load next level
