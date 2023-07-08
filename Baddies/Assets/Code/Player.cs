@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
 
 	public Transform leftShoulder;
     public Transform rightShoulder;
+	public Transform inputFrame;
     public Quaternion inputRotation = Quaternion.identity;
 
     [System.Serializable]
@@ -86,7 +87,7 @@ public class Player : MonoBehaviour
 	public Vector2 aimOffset;
 	public Vector2 randomMove;
 	public Vector3 desiredMove;
-
+	public Vector2 inputFromAgent;
 
 	void Start ()
     {
@@ -193,6 +194,9 @@ public class Player : MonoBehaviour
         }
 
         inputsLast = inputs;
+
+		if (inputFrame)
+			inputFrame.rotation = inputRotation;
     }
 
 	void UpdateAI()
@@ -223,16 +227,7 @@ public class Player : MonoBehaviour
 			}
 			if (go)
 			{
-				if (knownObjects.FindIndex(ko => ko.go == go) < 0)
-				{//not known yet
-					//should we check distance or visibility?
-					KnownObject ko = new KnownObject();
-					ko.go = go;
-					ko.type = go.GetComponent<Enemy>() ? ObjectType.Monster :
-							go.GetComponent<PickUp>() ? ObjectType.PickUp :
-							ObjectType.Unknown;
-					knownObjects.Add(ko);
-				}
+				AddKnownObject(go);
 			}
 		}
 
@@ -260,7 +255,7 @@ public class Player : MonoBehaviour
 			switch(ko.type)
 			{
 				case ObjectType.Goal:
-					ko.priority = (1.0f / ko.distance) * 5.0f; //5 times higher
+					ko.priority = (10.0f / ko.distance) * 2.0f; //higher
 					break;
 
 				case ObjectType.Monster:
@@ -269,15 +264,15 @@ public class Player : MonoBehaviour
 						knownObjects.RemoveAt(i);
 						continue;
 					}
-					ko.priority = 1.0f / ko.distance;
+					ko.priority = 10.0f / ko.distance;
 					break;
 
 				default:
-					ko.priority = 1.0f / ko.distance;
+					ko.priority = 10.0f / ko.distance;
 					break;
 			}
 
-			Debug.DrawLine(here, there, Color.Lerp(Color.red, Color.green, Mathf.Clamp01(ko.priority)));
+			Debug.DrawLine(here, there, Color.Lerp(Color.green, Color.red, Mathf.Clamp01(ko.priority)));
 		}
 
 		knownObjects.Sort((p1, p2) => p2.priority.CompareTo(p1.priority));
@@ -294,7 +289,7 @@ public class Player : MonoBehaviour
 			switch (ko.type)
 			{
 				case ObjectType.Monster:
-					Vector3 toItLocal = Quaternion.Inverse(transform.rotation) * (there - here);
+					Vector3 toItLocal = Quaternion.Inverse(inputRotation) * (there - here);
 					toItLocal = Vector3.ClampMagnitude(toItLocal, 1.0f);
 					//inputs.ls = new Vector2(toItLocal.x, toItLocal.z) + Random.insideUnitCircle * 0.1f;
 					inputs.rs = new Vector2(toItLocal.x, toItLocal.z) + aimOffset;
@@ -304,8 +299,8 @@ public class Player : MonoBehaviour
 
 				case ObjectType.PickUp:
 					agent.SetDestination(go.transform.position);
-					//inputs.rs = Vector2.zero;
-					//inputs.RT = false;
+					inputs.rs = Vector2.zero;
+					inputs.RT = false;
 					break;
 
 				default:
@@ -319,8 +314,9 @@ public class Player : MonoBehaviour
 		}
 
 		//stay away from enemies
+		// MAYBE instead of summing them up, we should only care about the N highest priority object (for now N=1)
 		desiredMove = Vector3.zero;
-		for (int i = knownObjects.Count - 1; i >= 0; i--)
+		for (int i = 0; i < Mathf.Min(knownObjects.Count, 1); i++)
 		{
 			KnownObject ko = knownObjects[i];
 			GameObject go = ko.go;
@@ -335,7 +331,9 @@ public class Player : MonoBehaviour
 
 				case ObjectType.Goal:
 					if (ko.distance < 3.0f)
+					{
 						desiredMove += (there - here).normalized; //towards
+					}
 					break;
 
 				default:
@@ -344,9 +342,10 @@ public class Player : MonoBehaviour
 		}
 		if (desiredMove != Vector3.zero)
 		{
+			desiredMove *= 5.0f;
 			Debug.DrawRay(transform.position, desiredMove, Color.yellow);
 
-			Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
+			Vector3 desMoveLocal = Quaternion.Inverse(inputRotation) * Vector3.ClampMagnitude(desiredMove, 1.0f);
 			inputs.ls = new Vector2(desMoveLocal.x, desMoveLocal.z);
 			agent.isStopped = true; //cancel path
 		} else
@@ -358,7 +357,8 @@ public class Player : MonoBehaviour
 				agent.SetDestination(ko.go.transform.position);
 			}
 		}
-		inputs.ls = Vector2.ClampMagnitude(inputs.ls + InputFromAgent(), 1.0f);
+		inputFromAgent = InputFromAgent();
+		inputs.ls = Vector2.ClampMagnitude(inputs.ls + inputFromAgent, 1.0f);
 
 		// the rest only at lower frequency (every 0.5 sec, see below)
 		if (timer > 0)
@@ -370,6 +370,20 @@ public class Player : MonoBehaviour
 
 		aimOffset = Random.insideUnitCircle * 0.2f;
 		randomMove = Random.insideUnitCircle * 0.2f;
+	}
+
+	void AddKnownObject(GameObject go)
+	{
+		if (knownObjects.FindIndex(ko => ko.go == go) < 0)
+		{//not known yet
+		 //should we check distance or visibility?
+			KnownObject ko = new KnownObject();
+			ko.go = go;
+			ko.type = go.GetComponent<Enemy>() ? ObjectType.Monster :
+					go.GetComponent<PickUp>() ? ObjectType.PickUp :
+					ObjectType.Unknown;
+			knownObjects.Add(ko);
+		}
 	}
 
 	void UpdateAgent()
@@ -404,11 +418,12 @@ public class Player : MonoBehaviour
 		else
 			targetVel = Vector3.ClampMagnitude(targetVel * maxSpeed, maxSpeed);    //max speed
 */
-		Vector3 targetVel = Vector3.ClampMagnitude(agent.desiredVelocity, maxSpeed);
-		Vector3 v = targetVel - body.velocity;
-		v.y = 0;
+		Vector3 targetVel = Vector3.ClampMagnitude(agent.desiredVelocity + (agent.nextPosition - body.position) * 3.0f, maxSpeed);
+		Debug.DrawRay(body.position, targetVel, Color.cyan);
+		//Vector3 v = targetVel - body.velocity;
+		//v.y = 0;
 		//body.AddForce(Vector3.ClampMagnitude(v / 0.05f, 10.0f));
-		Vector3 desMoveLocal = Quaternion.Inverse(transform.rotation) * Vector3.ClampMagnitude(v, 1.0f);
+		Vector3 desMoveLocal = Quaternion.Inverse(inputRotation) * Vector3.ClampMagnitude(targetVel / maxSpeed, 1.0f);
 		return new Vector2(desMoveLocal.x, desMoveLocal.z);
 	}
 
@@ -478,7 +493,7 @@ public class Player : MonoBehaviour
         idealFwd.y = 0;
         idealFwd.Normalize();
         float angle = 0.0f;
-        if (inputs.ls.magnitude > 0.1f && inputs.LT)
+        if (inputs.ls.magnitude > 0.1f /*&& inputs.LT*/)
             angle += la;// idealFwd = Quaternion.AngleAxis(la * 0.5f, Vector3.up) * idealFwd;
         if (inputs.rs.magnitude > 0.1f)
             angle += ra;// idealFwd = Quaternion.AngleAxis(ra * 0.5f, Vector3.up) * idealFwd;
@@ -532,7 +547,17 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void OnDeath()
+	private void OnCollisionEnter(Collision collision)
+	{
+		Enemy e = collision.collider.gameObject.GetComponentInParents<Enemy>();
+		if (e != null)
+		{
+			AddKnownObject(e.gameObject);
+		}
+	}
+
+
+	public void OnDeath()
     {
         this.enabled = false;
 		if (agent)
