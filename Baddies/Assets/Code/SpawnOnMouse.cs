@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Code.GameState;
 using UnityEngine;
 
 public class SpawnOnMouse : MonoBehaviour
@@ -38,6 +39,8 @@ public class SpawnOnMouse : MonoBehaviour
 
     private void SpawnEnemy(Vector3 spawnPoint)
     {
-        Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
+        var obj = Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
+        EventManager.Instance.MinionSpawned(this, obj.GetComponent<Enemy>());
+        obj.SetActive(true);
     }
 }
