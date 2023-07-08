@@ -49,7 +49,6 @@ public class CameraMovement : MonoBehaviour
             transform.Rotate(new Vector3(-Input.GetAxisRaw("Mouse Y") * _cameraMouseSensitivity, 0, 0), Space.Self);
             var angles = transform.rotation.eulerAngles;
             transform.rotation = Quaternion.Euler(Mathf.Clamp(angles.x, 290, 350), angles.y, 0);
-            Debug.Log($"{angles.x}, {angles.y}");
         }
 
 		camera.transform.position += camera.transform.forward * Input.mouseScrollDelta.y;
