@@ -110,7 +110,8 @@ public class Player : MonoBehaviour
 			agent.speed = maxSpeed;
 		}
 	}
-/*
+
+#if UNITY_EDITOR
 	void OnGUI()
 	{
 		// Debug GUI
@@ -121,9 +122,11 @@ public class Player : MonoBehaviour
 			+ "\r\n hasPath = " + agent.hasPath
 			+ "\r\n pasthStatus = " + agent.pathStatus
 			+ "\r\n pending = " + agent.pathPending
-			+ "\r\n remDist = " + agent.remainingDistance);
+			+ "\r\n remDist = " + agent.remainingDistance
+			+ "\r\n stuckT = " + stuckTimer
+			);
 	}
-*/
+#endif
 
 	void FixedUpdate ()
     {
@@ -414,7 +417,10 @@ public class Player : MonoBehaviour
 			} else
 			{
 				//no monster near and no known goal. explore?
-				status = "could explore";
+				if (!agent.isStopped && agent.hasPath)
+					status = "exploring";
+				else
+					status = "could explore";
 			}
 		}
 
@@ -441,12 +447,24 @@ public class Player : MonoBehaviour
 				agent.SetDestination(transform.position + new Vector3(offset.x, 0, offset.y));
 				agent.isStopped = false;
 				status = "StartExplore";
+			} else
+			if (Random.value < 0.5f)
+			{//randomly look around
+				inputRotation = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.up);
+				inputs.ls = Vector2.zero;
+				inputs.rs = Vector2.zero; 
+				inputs.RT = false;
+				agent.isStopped = true; //cancel path
+				status = "Look";
+				stuckTimer = 3.0f;
+				return;
 			}
 		}
 
 		if (inputs.ls.magnitude > 0.2f && body.velocity.magnitude < 1.0f)
 		{
 			stuckTimer -= 0.5f;
+
 			if (stuckTimer <= 0)
 			{
 				Debug.Log("STUCK!");
@@ -456,10 +474,10 @@ public class Player : MonoBehaviour
 				agent.isStopped = true;
 				agent.ResetPath();
 				inputs.ls = Random.insideUnitCircle;
-				stuckTimer = 3.0f;
+				stuckTimer = 3.0f; //well a bit weird but ok for now
 			}
 		} else
-		{
+		{//not stuck
 			stuckTimer = 2.0f;
 		}
 	}

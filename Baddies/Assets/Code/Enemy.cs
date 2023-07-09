@@ -48,6 +48,14 @@ public class Enemy : MonoBehaviour
 
     void FixedUpdate ()
     {
+		if (Gameplay.singleton && Gameplay.singleton.state != Gameplay.State.Wave)
+		{
+			//wait
+			targetVel = Vector3.zero; //stop
+			agent.isStopped = true;
+			return;
+		}
+
 		//ToDo: only move towards the player IF I CAN SEE! =o)
 
 		// every frame...
@@ -115,7 +123,7 @@ public class Enemy : MonoBehaviour
 
 		// every frame...
 		agent.velocity = body.velocity + (body.position - agent.nextPosition) * 0.1f;
-		if (agent.hasPath)
+		if (agent.hasPath && agent.path.corners.Length >= 1)
 		{
 			int n = 1;
 			Vector3 targetPos = agent.path.corners[n];
