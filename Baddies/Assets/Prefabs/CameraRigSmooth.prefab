@@ -173,12 +173,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 645f2fe8d6fc9db43bd759494e5e0b2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _camera: {fileID: 0}
+  _mousePos: {x: 0, y: 0}
+  _pointDistance: 100
   _spawnCooldown: 1
+  cooldownTimer: 0
   _isOnCoolDown: 0
-  _enemyPrefab: {fileID: 114886785500246950, guid: 31c1522a97b2899449081eb099a041cd, type: 3}
+  _enemyPrefab: {fileID: 114886785500246950, guid: bbe880461cd80914a944e4b9a1c42fc4, type: 3}
+  playerInstance: {fileID: 0}
   _canSpawnAudio: {fileID: 587907210379714362, guid: 60881e0059d713a4189f97bc4acaa94f, type: 3}
   _cannotSpawnAudio: {fileID: 587907210379714362, guid: dd20d8f265d64df40843efb7d6013d11, type: 3}
   _onCooldownAudio: {fileID: 3571097254555316392, guid: a6b315dc90bc98c44ba91b982f7606a1, type: 3}
+  hitValid: 0
+  canSpawnThere: 0
+  notInView: 0
 --- !u!1 &5744620330817270179
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,7 +290,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d33b958133a7454d84eb99f088885aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  camera: {fileID: 5744620330608937071}
+  _camera: {fileID: 5744620330608937071}
+  _cameraPivot: {fileID: 8711302759417859537}
   _cameraMovementSpeed: 25
   _cameraTurnSpeed: 60
   _cameraZoomSpeed: 10
@@ -373,7 +382,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8711302759417859537}
-  m_LocalRotation: {x: -0.25266048, y: 0, z: 0, w: 0.96755505}
+  m_LocalRotation: {x: -0.30070576, y: 0, z: 0, w: 0.953717}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -381,4 +390,4 @@ Transform:
   - {fileID: 5744620330608937075}
   m_Father: {fileID: 5744620331343216658}
   m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: -29.27, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -35, y: 0, z: 0}
