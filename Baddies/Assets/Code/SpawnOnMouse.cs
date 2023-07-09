@@ -54,7 +54,7 @@ public class SpawnOnMouse : MonoBehaviour
             _camera.farClipPlane);
 
         var worldPoint = _camera.ScreenToWorldPoint(_mousePos);
-        Debug.DrawLine(transform.position, worldPoint, Color.magenta, 0.1f);
+        //Debug.DrawLine(transform.position, worldPoint, Color.magenta);
 
 		// ALWAYS do the raycast and render a "cursor" to show whether you could or couldn't spawn there (and why)
 		// (and a cooldown timer when on cooldown)
