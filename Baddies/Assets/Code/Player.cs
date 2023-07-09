@@ -499,8 +499,8 @@ public class Player : MonoBehaviour
 	{
 		if (!agent.hasPath) return Vector2.zero;
 
-		int n = 1;
-		Vector3 targetPos = agent.path.corners[n];
+		//int n = 1;
+		//Vector3 targetPos = agent.path.corners[n];
 		//while (n < agent.path.corners.Length-1 && (targetPos - body.position).magnitude < 2.0f)
 		//{
 		//    targetPos = agent.path.corners[n];
@@ -595,7 +595,7 @@ public class Player : MonoBehaviour
         idealFwd.Normalize();
         float angle = 0.0f;
         if (inputs.ls.magnitude > 0.1f /*&& inputs.LT*/)
-            angle += la * 0.5f;// idealFwd = Quaternion.AngleAxis(la * 0.5f, Vector3.up) * idealFwd;
+            angle += la * 0.25f;// idealFwd = Quaternion.AngleAxis(la * 0.5f, Vector3.up) * idealFwd;
         if (inputs.rs.magnitude > 0.1f)
             angle += ra;// idealFwd = Quaternion.AngleAxis(ra * 0.5f, Vector3.up) * idealFwd;
 
