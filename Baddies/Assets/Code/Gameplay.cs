@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using UnityEngine.UI;
 
 public class Gameplay : MonoBehaviour
 {
@@ -38,11 +38,12 @@ public class Gameplay : MonoBehaviour
 
     public float enemies, kills;
 
-    public UnityEngine.UI.Text textTopLeft;
-    public UnityEngine.UI.Text textTopRight;
-    public UnityEngine.UI.Text textTopRight2;
-    public UnityEngine.UI.Text textTopMid;
-    public UnityEngine.UI.Text textMid;
+	public Canvas canvas;
+    public Text textTopLeft;
+    public Text textTopRight;
+    public Text textTopRight2;
+    public Text textTopMid;
+    public Text textMid;
 
     public AudioSource onWaveStart;
     public AudioSource music;
@@ -82,6 +83,18 @@ public class Gameplay : MonoBehaviour
 	{
 		if (singleton) { Destroy(this); return; }
 		singleton = this;
+
+		//quick and dirty way to connect this prefab instance to the UI in the scene 
+		canvas = FindObjectOfType<Canvas>();
+		if (canvas)
+		{
+			//Text[] texts = FindObjectsOfType<Text>();
+			textTopLeft = GameObject.Find("Text_Health").GetComponent<Text>();
+			textTopRight = GameObject.Find("Text_Kills").GetComponent<Text>();
+			textTopRight2 = GameObject.Find("Text_Baddies").GetComponent<Text>();
+			textTopMid = GameObject.Find("Text_TopCentre").GetComponent<Text>();
+			textMid = GameObject.Find("Text_Centre").GetComponent<Text>();
+		}
 	}
 
     void Start ()
