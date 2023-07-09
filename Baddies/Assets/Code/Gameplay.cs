@@ -154,7 +154,7 @@ public class Gameplay : MonoBehaviour
                 Health h = player.GetComponent<Health>();
                 if (h != null)
                 {
-                    textTopLeft.text = string.Format("Health {0}", h.health);
+                    if (textTopLeft) textTopLeft.text = string.Format("Health {0}", h.health);
                     if (h.health <= 0)
                     {
                         GameOver();
@@ -183,7 +183,7 @@ public class Gameplay : MonoBehaviour
                 break;
 
             case State.Wait:
-                textTopMid.text = string.Format("incoming... {0:0}", Mathf.Clamp(waitTime - timer, 0, 999));
+				if (textTopMid) textTopMid.text = string.Format("incoming... {0:0}", Mathf.Clamp(waitTime - timer, 0, 999));
                 if (timer > waitTime && enemies < 100)
                 {
                     int i = 0;
@@ -197,7 +197,7 @@ public class Gameplay : MonoBehaviour
                     }
                     state = State.Wave;
                     timer = 0;
-                    textTopMid.text = string.Format("Wave {0}", wave);
+					if (textTopMid) textTopMid.text = string.Format("Wave {0}", wave);
                     StartCoroutine(FlashText(string.Format("WAVE {0}", wave), 0.45f));
                     onWaveStart.pitch = 1.0f + 0.02f * wave;
                     onWaveStart.Play();
@@ -216,7 +216,7 @@ public class Gameplay : MonoBehaviour
                     wave++;
                     state = State.Wait;
                     timer = 0;
-                    textTopMid.text = string.Format("incoming...", wave);
+                    if (textTopMid) textTopMid.text = string.Format("incoming...", wave);
                 }
                 break;
         }
@@ -229,7 +229,7 @@ public class Gameplay : MonoBehaviour
         music.Stop();
         onGameOver.Play();
 
-        textTopLeft.text = "DEAD";
+		if (textTopLeft) textTopLeft.text = "DEAD";
         foreach (Spawner s in spawners)
             s.gameObject.SetActive(false);
 
@@ -272,7 +272,7 @@ public class Gameplay : MonoBehaviour
         yield return StartCoroutine(FlashText("GOOD", 0.45f));
         yield return StartCoroutine(FlashText("LUCK", 0.45f));
 */
-        textMid.text = "";
+        if (textMid) textMid.text = "";
     }
 
     public bool flashingText;   //simple semaphore
@@ -281,13 +281,13 @@ public class Gameplay : MonoBehaviour
         while (flashingText)
             yield return new WaitForEndOfFrame();
         flashingText = true;
-        textMid.text = text;
+		if (textMid) textMid.text = text;
         for (float a = 1; a >= 0; a -= Time.deltaTime / time)
         {
-            textMid.color = new Color(1, 1, 1, a);
+			if (textMid) textMid.color = new Color(1, 1, 1, a);
             yield return new WaitForEndOfFrame();
         }
-        textMid.color = Color.clear;
+		if (textMid) textMid.color = Color.clear;
         flashingText = false;
     }
 
