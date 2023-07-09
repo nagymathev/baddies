@@ -49,6 +49,7 @@ public class Gameplay : MonoBehaviour
     public AudioSource music;
     public AudioSource onGameOver;
 
+
 	public static void AddPlayer(GameObject go)
 	{
 		singleton.players.Add(go);
@@ -58,11 +59,17 @@ public class Gameplay : MonoBehaviour
 	{
 		singleton.monsters.Add(go);
 		EventListener.Get(go).OnDestroyDelegate += OnDestroyMonster;
+
+		if (singleton.textTopRight2 != null)
+			singleton.textTopRight2.text = string.Format("Baddies {0}", singleton.monsters.Count);
 	}
 	public static void AddGoal(GameObject go)
 	{
 		singleton.goals.Add(go);
 		EventListener.Get(go).OnDestroyDelegate += OnDestroyGoal;
+
+		if (singleton.textTopRight2 != null)
+			singleton.textTopRight2.text = string.Format("Baddies {0}", singleton.monsters.Count);
 	}
 
 	static void OnDestroyPlayer(GameObject go)
@@ -83,6 +90,7 @@ public class Gameplay : MonoBehaviour
 	{
 		if (singleton) { Destroy(this); return; }
 		singleton = this;
+		GameObject.DontDestroyOnLoad(this.gameObject);
 
 		//quick and dirty way to connect this prefab instance to the UI in the scene 
 		canvas = FindObjectOfType<Canvas>();
@@ -99,7 +107,9 @@ public class Gameplay : MonoBehaviour
 
     void Start ()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
+		Debug.Log("current scene: " + SceneManager.GetSceneAt(0).name);
+
+		player = GameObject.FindGameObjectWithTag("Player");
 
         spawners = GameObject.FindObjectsOfType<Spawner>();
         System.Array.Sort(spawners, delegate(Spawner a, Spawner b) { return a.name.CompareTo(b.name); });
@@ -109,7 +119,7 @@ public class Gameplay : MonoBehaviour
         foreach (Spawner s in spawners)
         {
             s.gameObject.SetActive(false);
-            s.OnSpawnDelegate += OnSpawnDelegate;
+            //s.OnSpawnDelegate += OnSpawnDelegate;
             spawnScales[i] = 1.0f / s.spawnTime;
             i++;
         }
@@ -122,7 +132,7 @@ public class Gameplay : MonoBehaviour
 
         StartCoroutine(Intro());
     }
-
+/*
     private void OnSpawnDelegate(GameObject g)
     {
         enemies++;
@@ -142,6 +152,7 @@ public class Gameplay : MonoBehaviour
         if (textTopRight2 != null)
             textTopRight2.text = string.Format("Enemies {0}", enemies);
     }
+*/
 
     void FixedUpdate ()
     {
@@ -197,17 +208,19 @@ public class Gameplay : MonoBehaviour
                     }
                     state = State.Wave;
                     timer = 0;
+/*
 					if (textTopMid) textTopMid.text = string.Format("Wave {0}", wave);
                     StartCoroutine(FlashText(string.Format("WAVE {0}", wave), 0.45f));
                     onWaveStart.pitch = 1.0f + 0.02f * wave;
                     onWaveStart.Play();
                     if (camCon && wave>1)
                         camCon.NextCamera();
+*/
                 }
                 break;
 
             case State.Wave:
-                if (timer > waveTime || (timer > waveTime * 0.5f && enemies == 0))
+/*                if (timer > waveTime || (timer > waveTime * 0.5f && enemies == 0))
                 {
                     foreach (Spawner s in spawners)
                     {
@@ -218,6 +231,7 @@ public class Gameplay : MonoBehaviour
                     timer = 0;
                     if (textTopMid) textTopMid.text = string.Format("incoming...", wave);
                 }
+*/
                 break;
         }
     }
@@ -248,7 +262,13 @@ public class Gameplay : MonoBehaviour
         yield return StartCoroutine(FlashText("", 1.0f));
         yield return StartCoroutine(FlashText("GAME", 1.0f));
         yield return StartCoroutine(FlashText("OVER", 1.0f));
-    }
+
+		yield return new WaitForSeconds(3.0f);
+
+		// reload(restart) current scene
+		string sceneName = SceneManager.GetSceneAt(0).name;
+		SceneManager.LoadScene(sceneName);
+	}
 
     IEnumerator Intro()
     {
