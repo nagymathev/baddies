@@ -91,7 +91,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 100
   field of view: 70
   orthographic: 0
   orthographic size: 5
@@ -184,6 +184,8 @@ MonoBehaviour:
   _canSpawnAudio: {fileID: 587907210379714362, guid: 60881e0059d713a4189f97bc4acaa94f, type: 3}
   _cannotSpawnAudio: {fileID: 587907210379714362, guid: dd20d8f265d64df40843efb7d6013d11, type: 3}
   _onCooldownAudio: {fileID: 3571097254555316392, guid: a6b315dc90bc98c44ba91b982f7606a1, type: 3}
+  canSpawnInView: 0
+  playerViewDistance: 30
   hitValid: 0
   canSpawnThere: 0
   notInView: 0
@@ -297,6 +299,7 @@ MonoBehaviour:
   _cameraZoomSpeed: 10
   _cameraDragSpeed: 1
   _cameraMouseSensitivity: 3
+  _zoomLevel: 0
 --- !u!1 &5744620331925928471
 GameObject:
   m_ObjectHideFlags: 0

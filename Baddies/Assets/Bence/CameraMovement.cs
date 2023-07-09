@@ -6,14 +6,21 @@ using UnityEngine.Serialization;
 public class CameraMovement : MonoBehaviour
 {
 
-    [SerializeField] private GameObject _camera;
-    [SerializeField] private GameObject _cameraPivot;
-    [SerializeField] private float _cameraMovementSpeed = 25;
-    [SerializeField] private float _cameraTurnSpeed = 60;
-    [SerializeField] private float _cameraZoomSpeed = 10;
-    [SerializeField] private float _cameraDragSpeed = 1;
-    [SerializeField] private float _cameraMouseSensitivity = 3;
-    private float _zoomLevel;
+    [SerializeField]
+	public GameObject _camera;
+    [SerializeField]
+	public GameObject _cameraPivot;
+    [SerializeField]
+	public float _cameraMovementSpeed = 25;
+    [SerializeField]
+	public float _cameraTurnSpeed = 60;
+    [SerializeField]
+	public float _cameraZoomSpeed = 10;
+    [SerializeField]
+	public float _cameraDragSpeed = 1;
+    [SerializeField]
+	public float _cameraMouseSensitivity = 3;
+    public float _zoomLevel;
 
     // Start is called before the first frame update
     void Start()
@@ -27,16 +34,21 @@ public class CameraMovement : MonoBehaviour
         Vector3 cameraRotation = _camera.transform.rotation.eulerAngles;
         var rotation = Quaternion.Euler(0, cameraRotation.y, 0);
 
-        Vector3 inputDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+        Vector3 inputDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
         inputDir = Vector3.ClampMagnitude(inputDir, 1);
 
         transform.position += rotation * inputDir * (Time.deltaTime * _cameraMovementSpeed);
-        transform.Rotate(new Vector3(0, Input.GetAxisRaw("QE_Rotation") * _cameraTurnSpeed * Time.deltaTime, 0) , Space.World);
+        transform.Rotate(new Vector3(0, Input.GetAxis("QE_Rotation") * _cameraTurnSpeed * Time.deltaTime, 0) , Space.World);
 
         // Zoom In and Out
         _camera.transform.Translate(new Vector3(0, 0, Input.GetAxisRaw("Mouse ScrollWheel") * _cameraZoomSpeed), Space.Self);
+		float dist = Vector3.Dot(_camera.transform.forward, transform.position - _camera.transform.position);
+		if (dist < 2.0f)
+			_camera.transform.position -= _camera.transform.forward * (3.0f - dist);
+		if (dist > 50.0f)
+			_camera.transform.position -= _camera.transform.forward * (50.0f - dist);
 
-        _zoomLevel = (transform.position - _camera.transform.position).magnitude;
+		_zoomLevel = dist;// (transform.position - _camera.transform.position).magnitude;
 
 		//Dragging / Panning
 		if (Input.GetMouseButton(1))

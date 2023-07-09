@@ -70,10 +70,12 @@ public class Player : MonoBehaviour
 	//Ai work variables
 	public int maxKnownObjects = 10;
 	public float eyeHeight = 1.5f;
+	public float maxViewDistance = 30.0f;
+	public float exploreRange = 50.0f;
 	float minMonsterDistance = 10.0f;
+	float midMonsterDistance = 20.0f;
 	float maxMonsterDistance = 30.0f;
 
-	float maxViewDistance = 30.0f;
 
 	[System.Serializable]
 	public class KnownObject
@@ -108,9 +110,10 @@ public class Player : MonoBehaviour
 			agent.speed = maxSpeed;
 		}
 	}
-
+/*
 	void OnGUI()
 	{
+		// Debug GUI
 		agentHasPath = agent.hasPath;
 		GUI.Label(new Rect(10.0f, 50.0f, 500,500),
 			" status = "+ status
@@ -120,7 +123,7 @@ public class Player : MonoBehaviour
 			+ "\r\n pending = " + agent.pathPending
 			+ "\r\n remDist = " + agent.remainingDistance);
 	}
-
+*/
 
 	void FixedUpdate ()
     {
@@ -338,6 +341,11 @@ public class Player : MonoBehaviour
 						float f = (minMonsterDistance - ko.distance) / minMonsterDistance;
 						desiredMove += (there - here).normalized * -f; //away
 					}
+					if (ko.distance > midMonsterDistance)
+					{
+						float f = (midMonsterDistance - ko.distance) / midMonsterDistance;
+						desiredMove += (there - here).normalized * -f; //towards actually
+					}
 					break;
 
 				case ObjectType.Goal:
@@ -427,9 +435,9 @@ public class Player : MonoBehaviour
 		if (knownObjects.Count == 0)
 		{
 			//explore
-			if (Random.value < 0.1f) //about once every 5 seconds
+			if (Random.value < 0.2f) //about once every 2.5 seconds
 			{
-				Vector2 offset = Random.insideUnitCircle * 30.0f;
+				Vector2 offset = Random.insideUnitCircle * exploreRange;
 				agent.SetDestination(transform.position + new Vector3(offset.x, 0, offset.y));
 				agent.isStopped = false;
 				status = "StartExplore";
