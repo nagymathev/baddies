@@ -51,7 +51,7 @@ public class SpawnOnMouse : MonoBehaviour
         var _mousePos = new Vector3(
             Mathf.Clamp(Input.mousePosition.x, 0, Screen.width),
             Mathf.Clamp(Input.mousePosition.y, 0, Screen.height),
-            _pointDistance); // Z distance from camera
+            _camera.farClipPlane);
 
         var worldPoint = _camera.ScreenToWorldPoint(_mousePos);
         Debug.DrawLine(transform.position, worldPoint, Color.magenta, 0.1f);
