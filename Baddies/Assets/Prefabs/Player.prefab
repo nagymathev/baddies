@@ -798,7 +798,7 @@ MonoBehaviour:
     bulletsAtOnce: 1
   cameraRig: {fileID: 0}
   sloMoScale: 0.25
-  maxSpeed: 7
+  maxSpeed: 5
   inputRotationSlerp: 0.05
   onDeath: {fileID: 0}
   inputs:
@@ -833,6 +833,8 @@ MonoBehaviour:
     Back: 0
   maxKnownObjects: 10
   eyeHeight: 1.5
+  maxViewDistance: 25
+  exploreRange: 50
   knownObjects: []
   timer: 0
   aimOffset: {x: 0, y: 0}

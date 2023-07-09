@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Bence/SubCity.unity
+    guid: b238b83568b83a04899073173db41190
+  - enabled: 1
     path: Assets/Scenes/TestSuburbs.unity
     guid: 25fed867014df214085a5daa2a118065
   m_configObjects: {}
