@@ -144,29 +144,37 @@ public class Gameplay : MonoBehaviour
 
         StartCoroutine(Intro());
     }
-/*
-    private void OnSpawnDelegate(GameObject g)
-    {
-        enemies++;
-        EventListener.Get(g).OnDestroyDelegate += Enemy_OnDestroyDelegate;
-        if (textTopRight2 != null)
-            textTopRight2.text = string.Format("Enemies {0}", enemies);
-    }
+	/*
+		private void OnSpawnDelegate(GameObject g)
+		{
+			enemies++;
+			EventListener.Get(g).OnDestroyDelegate += Enemy_OnDestroyDelegate;
+			if (textTopRight2 != null)
+				textTopRight2.text = string.Format("Enemies {0}", enemies);
+		}
 
-    private void Enemy_OnDestroyDelegate(GameObject g)
-    {
-        if (state == State.GameOver) return;    //too late, doesn't count
+		private void Enemy_OnDestroyDelegate(GameObject g)
+		{
+			if (state == State.GameOver) return;    //too late, doesn't count
 
-        enemies--;
-        kills++;
-        if (textTopRight!=null)
-            textTopRight.text = string.Format("Kills {0}", kills);
-        if (textTopRight2 != null)
-            textTopRight2.text = string.Format("Enemies {0}", enemies);
-    }
-*/
+			enemies--;
+			kills++;
+			if (textTopRight!=null)
+				textTopRight.text = string.Format("Kills {0}", kills);
+			if (textTopRight2 != null)
+				textTopRight2.text = string.Format("Enemies {0}", enemies);
+		}
+	*/
 
-    void FixedUpdate ()
+	void Update()
+	{
+		//pause/unpause (debug)
+		if (Input.GetKeyDown(KeyCode.P))
+			Time.timeScale = Time.timeScale == 0 ? 1.0f : 0.0f;
+	}
+
+
+	void FixedUpdate ()
     {
         timer -= Time.fixedDeltaTime;
 
