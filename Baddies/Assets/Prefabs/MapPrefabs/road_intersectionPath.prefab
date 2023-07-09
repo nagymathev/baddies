@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 929274315229631115}
   - component: {fileID: 4272413588232543534}
   - component: {fileID: 2066693510856698340}
+  - component: {fileID: 2226972699490870959}
   m_Layer: 0
   m_Name: road_intersectionPath
   m_TagString: Untagged
@@ -86,3 +87,15 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2226972699490870959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 553558734305511473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0328b1504255a448fa62b6d6d853e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
