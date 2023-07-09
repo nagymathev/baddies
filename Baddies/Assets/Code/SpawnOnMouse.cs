@@ -86,6 +86,12 @@ public class SpawnOnMouse : MonoBehaviour
 			} else
 			if (!hitValid || !canSpawnThere || !notInView)
 			{
+				Debug.Log(
+					!hitValid ? "NO HIT" :
+					!canSpawnThere ? "can't spawn here" :
+					!notInView ? "in view" : 
+					"?"
+					);
 				PlayAudio(_cannotSpawnAudio);
 			} else
             {
