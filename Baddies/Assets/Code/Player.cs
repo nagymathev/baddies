@@ -73,6 +73,8 @@ public class Player : MonoBehaviour
 	float minMonsterDistance = 10.0f;
 	float maxMonsterDistance = 30.0f;
 
+	float maxViewDistance = 30.0f;
+
 	[System.Serializable]
 	public class KnownObject
 	{
@@ -221,6 +223,14 @@ public class Player : MonoBehaviour
 	{
 		if (!AI) return;
 
+		if (Gameplay.singleton && Gameplay.singleton.state != Gameplay.State.Wave)
+		{
+			//wait
+			inputs.ls = inputs.rs = Vector2.zero;
+			inputs.LT = inputs.RT = false;
+			return;
+		}
+
 		// first of all, need to see monsters and powerups (and goals; each level needs some goal to reach)
 		// priority #1: survive
 		//   detect getting attacked and react by doing something (run away or attack back)
@@ -253,7 +263,7 @@ public class Player : MonoBehaviour
 			}
 			if (go)
 			{
-				AddKnownObject(go);
+				TryAddKnownObject(go);
 			}
 		}
 
@@ -446,15 +456,19 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	void AddKnownObject(GameObject go)
+	void TryAddKnownObject(GameObject go)
 	{
-		if (knownObjects.FindIndex(ko => ko.go == go) < 0)
-		{//not known yet
-		 //should we check distance or visibility?
+		if (!go) return;
+		if ((go.transform.position - this.transform.position).magnitude > maxViewDistance) return; //too far, shouldn't see it yet
+
+		if (knownObjects.FindIndex(ko => ko.go == go) < 0) //only if not already know
+		{
+		 //should we check visibility?
 			KnownObject ko = new KnownObject();
 			ko.go = go;
 			ko.type = go.GetComponent<Enemy>() ? ObjectType.Monster :
 					go.GetComponent<PickUp>() ? ObjectType.Goal :
+					go.GetComponent<Goal>() ? ObjectType.Goal :
 					ObjectType.Unknown;
 			knownObjects.Add(ko);
 		}
@@ -631,7 +645,7 @@ public class Player : MonoBehaviour
 		Enemy e = collision.collider.gameObject.GetComponentInParents<Enemy>();
 		if (e != null)
 		{
-			AddKnownObject(e.gameObject);
+			TryAddKnownObject(e.gameObject);
 		}
 	}
 

@@ -29,8 +29,9 @@ public class Gameplay : MonoBehaviour
     public float[] spawnScales;
     public float waveTime = 10.0f;  //seconds
     public float waitTime = 10.0f;  //seconds
+	public float endTime = 3.0f;  //seconds
 
-    public State state;
+	public State state;
     public float timer;
     public int wave;
 
@@ -44,10 +45,12 @@ public class Gameplay : MonoBehaviour
     public Text textTopRight2;
     public Text textTopMid;
     public Text textMid;
+	public Image fadeRect;
 
     public AudioSource onWaveStart;
     public AudioSource music;
     public AudioSource onGameOver;
+	public AudioSource onPlayerWin;
 
 
 	public static void AddPlayer(GameObject go)
@@ -88,9 +91,18 @@ public class Gameplay : MonoBehaviour
 
 	void Awake()
 	{
-		if (singleton) { Destroy(this); return; }
+		fadeRect = GameObject.Find("Fadeout").GetComponent<Image>();
+		if (fadeRect) fadeRect.color = Color.black;
+
+		//if there's already a singleton, self-destruct
+		if (singleton) { Destroy(this.gameObject); return; }
 		singleton = this;
 		GameObject.DontDestroyOnLoad(this.gameObject);
+	}
+
+    void Start ()
+    {
+		Debug.Log("current scene: " + SceneManager.GetSceneAt(0).name);
 
 		//quick and dirty way to connect this prefab instance to the UI in the scene 
 		canvas = FindObjectOfType<Canvas>();
@@ -102,12 +114,11 @@ public class Gameplay : MonoBehaviour
 			textTopRight2 = GameObject.Find("Text_Baddies").GetComponent<Text>();
 			textTopMid = GameObject.Find("Text_TopCentre").GetComponent<Text>();
 			textMid = GameObject.Find("Text_Centre").GetComponent<Text>();
+			fadeRect = GameObject.Find("Fadeout").GetComponent<Image>();
 		}
-	}
 
-    void Start ()
-    {
-		Debug.Log("current scene: " + SceneManager.GetSceneAt(0).name);
+		//temp. no need for it
+		if (textTopMid) textTopMid.text = "";
 
 		player = GameObject.FindGameObjectWithTag("Player");
 
@@ -124,11 +135,12 @@ public class Gameplay : MonoBehaviour
             i++;
         }
 
-        state = State.Wave;
-        wave = 0;
-        timer = waveTime;
+		wave = 0;
 
-        music.Play();
+		state = State.Wait;
+		timer = 0;// waveTime;
+
+        if (music) music.Play();
 
         StartCoroutine(Intro());
     }
@@ -156,7 +168,7 @@ public class Gameplay : MonoBehaviour
 
     void FixedUpdate ()
     {
-        timer += Time.fixedDeltaTime;
+        timer -= Time.fixedDeltaTime;
 
         if (state != State.GameOver)
         {
@@ -168,22 +180,22 @@ public class Gameplay : MonoBehaviour
                     if (textTopLeft) textTopLeft.text = string.Format("Health {0}", h.health);
                     if (h.health <= 0)
                     {
-                        GameOver();
+                        OnPlayerDied();
                     }
                 } else
                 {
-                    GameOver();
+					OnPlayerDied();
                 }
             } else
             {
-                GameOver();
+				OnPlayerDied();
             }
         }
 
         switch (state)
         {
             case State.GameOver:
-                if (timer > 3.0f
+				if (timer <= 0//> 3.0f
                     && (GamepadInput.GamePad.GetButton(GamepadInput.GamePad.Button.A, GamepadInput.GamePad.Index.Any)
                         || Input.GetKeyDown(KeyCode.Space)
                         )
@@ -194,8 +206,8 @@ public class Gameplay : MonoBehaviour
                 break;
 
             case State.Wait:
-				if (textTopMid) textTopMid.text = string.Format("incoming... {0:0}", Mathf.Clamp(waitTime - timer, 0, 999));
-                if (timer > waitTime && enemies < 100)
+				//if (textTopMid) textTopMid.text = string.Format("incoming... {0:0}", Mathf.Clamp(waitTime - timer, 0, 999));
+                if (timer <=0/*> waitTime*/ /*&& enemies < 100*/)
                 {
                     int i = 0;
                     foreach (Spawner s in spawners)
@@ -206,8 +218,9 @@ public class Gameplay : MonoBehaviour
                         //s.prefab = enemyTypes[wave % enemyTypes.Length];
                         i++;
                     }
+					//start wave
                     state = State.Wave;
-                    timer = 0;
+                    timer = waveTime;
 /*
 					if (textTopMid) textTopMid.text = string.Format("Wave {0}", wave);
                     StartCoroutine(FlashText(string.Format("WAVE {0}", wave), 0.45f));
@@ -228,7 +241,7 @@ public class Gameplay : MonoBehaviour
                     }
                     wave++;
                     state = State.Wait;
-                    timer = 0;
+                    timer = waitTime;
                     if (textTopMid) textTopMid.text = string.Format("incoming...", wave);
                 }
 */
@@ -236,12 +249,27 @@ public class Gameplay : MonoBehaviour
         }
     }
 
-    void GameOver()
+	public void OnPlayerReachedGoal()
+	{
+		state = State.GameOver;
+		timer = endTime;
+
+		if (music) music.Stop();
+		if (onPlayerWin) onPlayerWin.Play();
+
+		foreach (Spawner s in spawners)
+			s.gameObject.SetActive(false);
+
+		StartCoroutine(OutroWin());
+	}
+
+	public void OnPlayerDied()
     {
-        timer = 0;
         state = State.GameOver;
-        music.Stop();
-        onGameOver.Play();
+		timer = endTime;
+
+		if (music) music.Stop();
+        if (onGameOver) onGameOver.Play();
 
 		if (textTopLeft) textTopLeft.text = "DEAD";
         foreach (Spawner s in spawners)
@@ -254,25 +282,61 @@ public class Gameplay : MonoBehaviour
 //            leaderboard.SetScore(playerName, kills);
 //        }
 
-        StartCoroutine(Outro());
+        StartCoroutine(OutroLose());
     }
 
-    IEnumerator Outro()
-    {
-        yield return StartCoroutine(FlashText("", 1.0f));
-        yield return StartCoroutine(FlashText("GAME", 1.0f));
-        yield return StartCoroutine(FlashText("OVER", 1.0f));
+	IEnumerator OutroWin()
+	{
+		yield return StartCoroutine(FlashText("", 1.0f));
+		yield return StartCoroutine(FlashText("VICTORY!", 1.0f));
+		yield return StartCoroutine(FlashText("(this time)", 1.0f));
 
-		yield return new WaitForSeconds(3.0f);
+		yield return new WaitForSeconds(2.0f);
+
+		yield return StartCoroutine(FadeInOut(Color.clear, Color.black, 3.0f));
 
 		// reload(restart) current scene
-		string sceneName = SceneManager.GetSceneAt(0).name;
-		SceneManager.LoadScene(sceneName);
+		yield return LoadLevel(SceneManager.GetSceneAt(0).name);
+
+		//string sceneName = SceneManager.GetSceneAt(0).name;
+		//SceneManager.LoadScene(sceneName);
+		//yield return new WaitForEndOfFrame();
+		//Start();
 	}
 
-    IEnumerator Intro()
+	IEnumerator OutroLose()
+	{
+		yield return StartCoroutine(FlashText("", 1.0f));
+		yield return StartCoroutine(FlashText("GAME", 1.0f));
+		yield return StartCoroutine(FlashText("OVER", 1.0f));
+		yield return StartCoroutine(FlashText("(mhuahaha...)", 1.0f));
+
+		yield return new WaitForSeconds(2.0f);
+
+		yield return StartCoroutine(FadeInOut(Color.clear, Color.black, 3.0f));
+		yield return LoadLevel(SceneManager.GetSceneAt(0).name);
+	}
+
+	IEnumerator LoadLevel(string sceneName)
+	{
+		// reload(restart) current scene
+		//string sceneName = SceneManager.GetSceneAt(0).name;
+		SceneManager.LoadScene(sceneName);
+		yield return new WaitForEndOfFrame();
+		Start();
+	}
+
+	IEnumerator Intro()
     {
-        yield return StartCoroutine(FlashText("", 0.1f));
+		state = State.Wait;
+		timer = 3.0f + waitTime;
+
+		yield return StartCoroutine(FadeInOut(Color.black, Color.clear, 3.0f));
+
+		state = State.Wait;
+		timer = waitTime;
+
+		yield return StartCoroutine(FlashText("", 0.1f));
 /*        yield return StartCoroutine(FlashText("INFINITE", 0.6f));
         yield return StartCoroutine(FlashText("AMMO", 0.6f));
         yield return StartCoroutine(FlashText("", 0.6f));
@@ -311,7 +375,29 @@ public class Gameplay : MonoBehaviour
         flashingText = false;
     }
 
-    void HardRestartGame()
+	IEnumerator FadeInOut(Color fromColor, Color toColor, float time = 1.0f)
+	{
+		if (time > 0) //zero time sets it immediately
+		{
+			for (float a = 0.0f; a < 1.0f; a += Time.deltaTime / time)
+			{
+				if (fadeRect)
+				{
+					fadeRect.color = Color.Lerp(fromColor, toColor, a);
+					fadeRect.enabled = fadeRect.color.a > 0.001f;
+				}
+				yield return new WaitForEndOfFrame();
+			}
+		}
+		if (fadeRect)
+		{
+			fadeRect.color = toColor;
+			fadeRect.enabled = fadeRect.color.a > 0.001f;
+		}
+	}
+
+
+	void HardRestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }

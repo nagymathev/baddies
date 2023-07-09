@@ -33,6 +33,9 @@ public class SpawnOnMouse : MonoBehaviour
     [SerializeField]
 	public GameObject _onCooldownAudio;
 
+	public bool canSpawnInView;		//just for testing; set it to true to kill the player quicker
+	public float playerViewDistance = 30;
+
 	public bool hitValid;
 	public RaycastHit hit;
 	public bool canSpawnThere;
@@ -84,7 +87,7 @@ public class SpawnOnMouse : MonoBehaviour
 			{
 				PlayAudio(_onCooldownAudio);
 			} else
-			if (!hitValid || !canSpawnThere || !notInView)
+			if (!hitValid || !canSpawnThere || (!notInView && !canSpawnInView))
 			{
 				Debug.Log(
 					!hitValid ? "NO HIT" :
