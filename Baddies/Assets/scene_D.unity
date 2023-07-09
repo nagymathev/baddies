@@ -2934,7 +2934,7 @@ GameObject:
   - component: {fileID: 945249200}
   m_Layer: 0
   m_Name: Plane
-  m_TagString: Untagged
+  m_TagString: CanSpawnEnemiesHere
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -7477,22 +7477,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3749707320478983204, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5744620330117886770, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
-      propertyPath: m_RootOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5744620330608937075, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
-      propertyPath: m_RootOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5744620330817270180, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
-      propertyPath: m_RootOrder
-      value: 4
-      objectReference: {fileID: 0}
     - target: {fileID: 5744620331343216656, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
       propertyPath: m_Name
       value: CameraRigSmooth
@@ -7540,14 +7524,6 @@ PrefabInstance:
     - target: {fileID: 5744620331343216658, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5744620331925928472, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5744620331928881370, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}
-      propertyPath: m_RootOrder
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 34bb3d230622cf742b8d1c2fc65ae637, type: 3}

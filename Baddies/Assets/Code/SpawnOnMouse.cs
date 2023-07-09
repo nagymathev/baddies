@@ -39,6 +39,9 @@ public class SpawnOnMouse : MonoBehaviour
         var worldPoint = _camera.ScreenToWorldPoint(_mousePos);
         Debug.DrawLine(transform.position, worldPoint, Color.magenta, 0.1f);
 
+		//ToDo: ALWAYS do the raycast and render a "cursor" to show whether you could or couldn't spawn there 
+		// (and a cooldown timer when on cooldown)
+
         _isOnCoolDown = (Time.time - _cooldownStartTime) / _spawnCooldown <= _spawnCooldown;
         if (Input.GetMouseButtonDown(0))
         {
@@ -75,7 +78,7 @@ public class SpawnOnMouse : MonoBehaviour
     {
         if(!StateBehaviour.Instance.CanSpawnMinion(this, _enemyPrefab)) return;
 
-        var obj = Instantiate(_enemyPrefab, spawnPoint, gameObject.transform.rotation);
+		var obj = Instantiate(_enemyPrefab, spawnPoint, Quaternion.AngleAxis(Random.Range(0, 360), Vector3.up));// gameObject.transform.rotation);
         EventManager.Instance.MinionSpawned(this, obj);
         obj.gameObject.SetActive(true);
         PlayAudio(_canSpawnAudio);
@@ -83,6 +86,8 @@ public class SpawnOnMouse : MonoBehaviour
 
     private void PlayAudio(GameObject audioPrefab)
     {
+		if (!audioPrefab) return;
+
         Instantiate(audioPrefab, transform.position, transform.rotation, transform);
     }
 }
